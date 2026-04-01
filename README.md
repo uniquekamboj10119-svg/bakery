@@ -1,7 +1,7 @@
 # 🍞 Hisar Bakery — Persona Content Generator & Eval Framework
 
 Generates **ad_copy, tweet_post, offers, animation_prompt** for each of 1,500  
-customer personas using Hugging Face Inference API, then scores every output  
+customer personas using **Groq API (free, fast)**, then scores every output  
 against 9 evaluation metrics.
 
 ---
@@ -9,11 +9,14 @@ against 9 evaluation metrics.
 ## Folder Structure
 
 ```
-hisar_bakery_eval/
-├── eval_framework.py   ← main pipeline + evaluation engine
-├── prompts.py          ← all prompt templates (v1/v2/v3)
-├── requirements.txt
-└── README.md
+Prompt By me/
+├── eval_groq.py                          ← main pipeline (Groq API)
+├── prompts.py                            ← prompt templates (v1/v2/v3)
+├── requirements_groq.txt                 ← dependencies
+├── README_groq.md                        ← this file
+├── generated_content.jsonl               ← outputs (auto-created)
+├── eval_report.json                      ← evaluation scores (auto-created)
+└── Hisar_Bakery_1500_Customer_Personas.xlsx
 ```
 
 ---
@@ -21,39 +24,46 @@ hisar_bakery_eval/
 ## Setup
 
 ```bash
-pip install -r requirements.txt
-export HF_TOKEN="hf_YOUR_TOKEN_HERE"
+pip install -r requirements_groq.txt
 ```
 
-Get a free token at https://huggingface.co/settings/tokens  
-(read access is enough for serverless Inference API)
+**Set your Groq API key** (get free key at https://console.groq.com):
+
+Windows PowerShell:
+```powershell
+$env:GROQ_API_KEY = "gsk_YOUR_KEY_HERE"
+```
+
+To set it permanently (never need to set again):
+```powershell
+[System.Environment]::SetEnvironmentVariable("GROQ_API_KEY", "gsk_YOUR_KEY_HERE", "User")
+```
+Then close and reopen VS Code.
 
 ---
 
 ## Run
 
-### Quick smoke test (dry run, no API calls)
-```bash
-python eval_framework.py --dry-run --sample 20
+### Quick smoke test (no API calls)
+```powershell
+python eval_groq.py --dry-run --sample 20
 ```
 
-### Real generation — 50 personas
-```bash
-python eval_framework.py --sample 50
+### Real generation — 5 personas to test
+```powershell
+python eval_groq.py --sample 5
 ```
 
-### Full 1500 personas (takes ~2-4 hours on free tier)
-```bash
-python eval_framework.py
+### Full 1500 personas
+```powershell
+python eval_groq.py
 ```
 
-### Change model
-Edit `HF_MODEL` in `eval_framework.py`. Recommended models:
-| Model | Speed | Quality |
-|-------|-------|---------|
-| `mistralai/Mistral-7B-Instruct-v0.3` | Fast | Good |
-| `meta-llama/Meta-Llama-3-8B-Instruct` | Medium | Better |
-| `Qwen/Qwen2.5-7B-Instruct` | Fast | Great for multilingual |
+### Resume after interruption
+Just run the same command again — it automatically skips already completed personas:
+```powershell
+python eval_groq.py
+```
 
 ---
 
@@ -63,6 +73,19 @@ Edit `HF_MODEL` in `eval_framework.py`. Recommended models:
 |------|----------|
 | `generated_content.jsonl` | One JSON line per persona with all 4 outputs |
 | `eval_report.json` | Aggregate + per-persona evaluation scores |
+
+---
+
+## Groq Rate Limits (Free Tier)
+
+| Limit | Value |
+|-------|-------|
+| Tokens per day | 500,000 |
+| Requests per minute | ~30 |
+| Cost | FREE |
+
+At ~600 tokens per persona, you can process ~800 personas per day.  
+If you hit the daily limit, just run again the next day — resume is automatic.
 
 ---
 
@@ -84,24 +107,6 @@ Edit `HF_MODEL` in `eval_framework.py`. Recommended models:
 
 ---
 
-## Prompt Versions
-
-Switch prompt strategy in `prompts.py`:
-
-```python
-# in eval_framework.py, change:
-from prompts import get_prompt
-prompt_fn = get_prompt("v2")   # v1 | v2 (CoT) | v3 (minimal)
-```
-
-| Version | Strategy | Best for |
-|---------|----------|----------|
-| v1 | Direct JSON | Default, balanced |
-| v2 | Chain-of-Thought + JSON | Higher quality, slower |
-| v3 | Minimal 1-shot | Small/fast models |
-
----
-
 ## Animation Prompt Usage (Google Veo / Flow)
 
 The `animation_prompt` field is ready to paste directly into:
@@ -120,21 +125,11 @@ for a 6-10 second bakery advertisement scene.
 {
   "persona_id": 1,
   "name": "Mamta Antil",
-  "ad_copy": "Mamta ji, ताज़ा multigrain bread sirf aapke liye! Hisar Bakery now offers 
-              kesar-elaichi whole wheat loaves baked fresh every morning. Order on our 
-              app and get student discount — Order karo, swad lo! 🍞",
-  "tweet_post": "Fresh multigrain bakes daily at Hisar Bakery! 🥖 
-                 Perfect for health-conscious families in Hisar. 
-                 #HisarBakery #FreshBaked #HaryanaFood",
-  "offers": "Student Special: 15% off on all multigrain products on orders above ₹300. 
-             Valid Mon-Fri. Show student ID on app checkout.",
-  "animation_prompt": "Warm morning light streams into a cozy Hisar Bakery kitchen. 
-                       Camera starts with a slow aerial pan over golden multigrain loaves 
-                       cooling on a wooden rack. Close-up of steam rising as a loaf is 
-                       sliced, revealing seeded texture. Warm amber and cream color palette 
-                       with soft bokeh. Scene fades to a smiling family at breakfast table 
-                       with Hisar Bakery packaging.",
+  "ad_copy": "Mamta ji, ताज़ा multigrain bread sirf aapke liye! Hisar Bakery now offers kesar-elaichi whole wheat loaves baked fresh every morning. Order on our app and get student discount — Order karo, swad lo! 🍞",
+  "tweet_post": "Fresh multigrain bakes daily at Hisar Bakery! 🥖 Perfect for health-conscious families in Hisar. #HisarBakery #FreshBaked #HaryanaFood",
+  "offers": "Student Special: 15% off on all multigrain products on orders above ₹300. Valid Mon-Fri.",
+  "animation_prompt": "Warm morning light streams into a cozy Hisar Bakery kitchen. Camera starts with a slow aerial pan over golden multigrain loaves cooling on a wooden rack. Close-up of steam rising as a loaf is sliced. Warm amber and cream color palette with soft bokeh. Scene fades to a smiling family at breakfast table with Hisar Bakery packaging.",
   "parse_success": true,
-  "latency_ms": 2340.5
+  "latency_ms": 1166.8
 }
 ```
