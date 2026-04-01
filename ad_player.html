@@ -1,0 +1,436 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hisar Bakery Video Ad Player</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #ff6b6b, #feca57);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .main-container {
+            display: flex;
+            gap: 30px;
+            max-width: 1400px;
+            width: 100%;
+        }
+        
+        .ad-display {
+            flex: 2;
+            background: #0f3460;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        
+        .ad-image-container {
+            width: 100%;
+            height: 600px;
+            background: #1a1a2e;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .ad-image {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            border-radius: 10px;
+        }
+        
+        .placeholder {
+            text-align: center;
+            color: #666;
+        }
+        
+        .placeholder-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+        
+        .info-panel {
+            flex: 1;
+            background: #16213e;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            height: fit-content;
+        }
+        
+        .info-panel h2 {
+            color: #e94560;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            border-bottom: 2px solid #e94560;
+            padding-bottom: 10px;
+        }
+        
+        .info-item {
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #0f3460;
+            border-radius: 10px;
+        }
+        
+        .info-label {
+            font-size: 0.9em;
+            color: #aaa;
+            margin-bottom: 5px;
+        }
+        
+        .info-value {
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #fff;
+        }
+        
+        .controls {
+            margin-top: 30px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .btn {
+            padding: 15px 30px;
+            font-size: 1.1em;
+            font-weight: bold;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(45deg, #e94560, #ff6b6b);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(233, 69, 96, 0.4);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(45deg, #0f3460, #16213e);
+            color: white;
+            border: 2px solid #e94560;
+        }
+        
+        .btn-secondary:hover {
+            background: #e94560;
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .speed-control {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: #0f3460;
+            padding: 15px 25px;
+            border-radius: 50px;
+        }
+        
+        .speed-control label {
+            font-weight: bold;
+        }
+        
+        .speed-slider {
+            width: 150px;
+            height: 6px;
+            -webkit-appearance: none;
+            background: #1a1a2e;
+            border-radius: 3px;
+            outline: none;
+        }
+        
+        .speed-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #e94560;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        
+        .stats {
+            margin-top: 20px;
+            text-align: center;
+            padding: 15px;
+            background: #0f3460;
+            border-radius: 15px;
+        }
+        
+        .stats h3 {
+            color: #e94560;
+            margin-bottom: 10px;
+        }
+        
+        .status-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #0f3460;
+            padding: 15px;
+            text-align: center;
+            font-size: 0.9em;
+        }
+        
+        .category-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        
+        .cat-sweets { background: #ff6b6b; }
+        .cat-cakes { background: #4ecdc4; }
+        .cat-bread { background: #d4a373; }
+        .cat-namkeen { background: #f4a261; }
+        .cat-custom { background: #2a9d8f; }
+        
+        @media (max-width: 900px) {
+            .main-container {
+                flex-direction: column;
+            }
+            .ad-image-container {
+                height: 400px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🧁 Hisar Bakery Video Ad Player</h1>
+        <p>Personalized Advertisement Display System</p>
+    </div>
+    
+    <div class="main-container">
+        <div class="ad-display">
+            <div class="ad-image-container" id="adContainer">
+                <div class="placeholder">
+                    <div class="placeholder-icon">🎬</div>
+                    <h2>Welcome to Video Ad Player</h2>
+                    <p>Click "Random Ad" to start or "Auto Play" for slideshow</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="info-panel">
+            <h2>Ad Information</h2>
+            
+            <div class="info-item">
+                <div class="info-label">Ad ID</div>
+                <div class="info-value" id="adId">-</div>
+            </div>
+            
+            <div class="info-item">
+                <div class="info-label">District</div>
+                <div class="info-value" id="district">-</div>
+            </div>
+            
+            <div class="info-item">
+                <div class="info-label">Category</div>
+                <div class="info-value" id="category">-</div>
+            </div>
+            
+            <div class="info-item">
+                <div class="info-label">Target Audience</div>
+                <div class="info-value" id="occupation">-</div>
+            </div>
+            
+            <div class="info-item">
+                <div class="info-label">Message</div>
+                <div class="info-value" id="message" style="font-size: 0.9em; line-height: 1.4;">-</div>
+            </div>
+            
+            <div class="stats">
+                <h3>📊 Statistics</h3>
+                <p>Total Ads: <strong id="totalAds">0</strong></p>
+                <p>Played: <strong id="playedCount">0</strong></p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="controls">
+        <button class="btn btn-primary" id="randomBtn" onclick="showRandomAd()">
+            🎲 Random Ad
+        </button>
+        <button class="btn btn-secondary" id="playBtn" onclick="toggleAutoPlay()">
+            ▶️ Auto Play
+        </button>
+        <button class="btn btn-secondary" id="stopBtn" onclick="stopAutoPlay()" disabled>
+            ⏹️ Stop
+        </button>
+        
+        <div class="speed-control">
+            <label>Speed:</label>
+            <input type="range" class="speed-slider" id="speedSlider" min="1" max="10" value="3" onchange="updateSpeed(this.value)">
+            <span id="speedValue">3s</span>
+        </div>
+    </div>
+    
+    <div class="status-bar" id="statusBar">
+        Ready to play ads • Loaded <span id="statusTotal">0</span> advertisements
+    </div>
+
+    <script>
+        // Ad data will be injected here
+        const ads = [{"id": "HIS_0001", "meta": {"id": "HIS_0001", "timestamp": "2026-03-31T22:10:45.932293", "persona": {"id": "HIS_0001", "name": "Customer_1", "district": "Uklana", "age_group": "26-35", "occupation": "Homemaker", "preference": "Custom Orders", "income_level": "Middle", "family_size": 1, "visit_frequency": "Weekly"}, "ad_text": "Customer_1, create your dream cake! Custom orders available in Uklana.", "ad_type": "Custom Orders", "target_district": "Uklana"}, "image_path": "generated_visual_ads/square/ad_HIS_0001_square.jpg", "district": "Uklana", "preference": "Custom Orders"}, {"id": "HIS_0002", "meta": {"id": "HIS_0002", "timestamp": "2026-03-31T22:10:46.049194", "persona": {"id": "HIS_0002", "name": "Customer_2", "district": "Barwala", "age_group": "46-60", "occupation": "Working Professional", "preference": "Custom Orders", "income_level": "Middle", "family_size": 4, "visit_frequency": "Daily"}, "ad_text": "Wedding in Barwala? We specialize in bulk custom orders!", "ad_type": "Custom Orders", "target_district": "Barwala"}, "image_path": "generated_visual_ads/square/ad_HIS_0002_square.jpg", "district": "Barwala", "preference": "Custom Orders"}, {"id": "HIS_0003", "meta": {"id": "HIS_0003", "timestamp": "2026-03-31T22:10:46.125173", "persona": {"id": "HIS_0003", "name": "Customer_3", "district": "Adampur", "age_group": "60+", "occupation": "Farmer", "preference": "Cakes & Pastries", "income_level": "Low", "family_size": 1, "visit_frequency": "Daily"}, "ad_text": "Fresh pastries daily! Perfect for Farmers in Adampur.", "ad_type": "Cakes & Pastries", "target_district": "Adampur"}, "image_path": "generated_visual_ads/square/ad_HIS_0003_square.jpg", "district": "Adampur", "preference": "Cakes & Pastries"}, {"id": "HIS_0004", "meta": {"id": "HIS_0004", "timestamp": "2026-03-31T22:10:46.185395", "persona": {"id": "HIS_0004", "name": "Customer_4", "district": "Adampur", "age_group": "60+", "occupation": "Farmer", "preference": "Traditional Sweets", "income_level": "Low", "family_size": 3, "visit_frequency": "Daily"}, "ad_text": "Farmer from Adampur? Treat family to traditional mithai!", "ad_type": "Traditional Sweets", "target_district": "Adampur"}, "image_path": "generated_visual_ads/square/ad_HIS_0004_square.jpg", "district": "Adampur", "preference": "Traditional Sweets"}, {"id": "HIS_0005", "meta": {"id": "HIS_0005", "timestamp": "2026-03-31T22:10:46.244167", "persona": {"id": "HIS_0005", "name": "Customer_5", "district": "Uklana", "age_group": "18-25", "occupation": "Working Professional", "preference": "Bread & Buns", "income_level": "Low", "family_size": 2, "visit_frequency": "Daily"}, "ad_text": "Good morning Customer_5! Fresh pav and buns delivered across Uklana.", "ad_type": "Bread & Buns", "target_district": "Uklana"}, "image_path": "generated_visual_ads/square/ad_HIS_0005_square.jpg", "district": "Uklana", "preference": "Bread & Buns"}, {"id": "HIS_0006", "meta": {"id": "HIS_0006", "timestamp": "2026-03-31T22:10:46.299487", "persona": {"id": "HIS_0006", "name": "Customer_6", "district": "Uklana", "age_group": "36-45", "occupation": "Student", "preference": "Custom Orders", "income_level": "Middle", "family_size": 6, "visit_frequency": "Monthly"}, "ad_text": "Personalized gift hampers for Custom Orders lovers in Uklana!", "ad_type": "Custom Orders", "target_district": "Uklana"}, "image_path": "generated_visual_ads/square/ad_HIS_0006_square.jpg", "district": "Uklana", "preference": "Custom Orders"}, {"id": "HIS_0007", "meta": {"id": "HIS_0007", "timestamp": "2026-03-31T22:10:46.352905", "persona": {"id": "HIS_0007", "name": "Customer_7", "district": "Hansi", "age_group": "26-35", "occupation": "Retired", "preference": "Namkeen", "income_level": "Middle", "family_size": 3, "visit_frequency": "Daily"}, "ad_text": "Craving something savory? Try our Mathri & Namkeen - Hansi style!", "ad_type": "Namkeen", "target_district": "Hansi"}, "image_path": "generated_visual_ads/square/ad_HIS_0007_square.jpg", "district": "Hansi", "preference": "Namkeen"}, {"id": "HIS_0008", "meta": {"id": "HIS_0008", "timestamp": "2026-03-31T22:10:46.404052", "persona": {"id": "HIS_0008", "name": "Customer_8", "district": "Hisar", "age_group": "18-25", "occupation": "Retired", "preference": "Namkeen", "income_level": "Middle", "family_size": 5, "visit_frequency": "Occasionally"}, "ad_text": "Evening tea time? Pair it with fresh Samosas from Hisar bakery!", "ad_type": "Namkeen", "target_district": "Hisar"}, "image_path": "generated_visual_ads/square/ad_HIS_0008_square.jpg", "district": "Hisar", "preference": "Namkeen"}, {"id": "HIS_0009", "meta": {"id": "HIS_0009", "timestamp": "2026-03-31T22:10:46.462943", "persona": {"id": "HIS_0009", "name": "Customer_9", "district": "Adampur", "age_group": "18-25", "occupation": "Student", "preference": "Cakes & Pastries", "income_level": "Low", "family_size": 6, "visit_frequency": "Monthly"}, "ad_text": "Special 20% off all cakes this week in Adampur!", "ad_type": "Cakes & Pastries", "target_district": "Adampur"}, "image_path": "generated_visual_ads/square/ad_HIS_0009_square.jpg", "district": "Adampur", "preference": "Cakes & Pastries"}, {"id": "HIS_0010", "meta": {"id": "HIS_0010", "timestamp": "2026-03-31T22:10:46.514028", "persona": {"id": "HIS_0010", "name": "Customer_10", "district": "Hansi", "age_group": "60+", "occupation": "Homemaker", "preference": "Cakes & Pastries", "income_level": "Middle", "family_size": 6, "visit_frequency": "Weekly"}, "ad_text": "Hey Customer_10! Celebrate with our eggless Black Forest Cake!", "ad_type": "Cakes & Pastries", "target_district": "Hansi"}, "image_path": "generated_visual_ads/square/ad_HIS_0010_square.jpg", "district": "Hansi", "preference": "Cakes & Pastries"}, {"id": "HIS_0011", "meta": {"id": "HIS_0011", "timestamp": "2026-03-31T22:10:46.569260", "persona": {"id": "HIS_0011", "name": "Customer_11", "district": "Adampur", "age_group": "36-45", "occupation": "Farmer", "preference": "Custom Orders", "income_level": "Middle", "family_size": 1, "visit_frequency": "Occasionally"}, "ad_text": "Personalized gift hampers for Custom Orders lovers in Adampur!", "ad_type": "Custom Orders", "target_district": "Adampur"}, "image_path": "generated_visual_ads/square/ad_HIS_0011_square.jpg", "district": "Adampur", "preference": "Custom Orders"}, {"id": "HIS_0012", "meta": {"id": "HIS_0012", "timestamp": "2026-03-31T22:10:46.650975", "persona": {"id": "HIS_0012", "name": "Customer_12", "district": "Adampur", "age_group": "26-35", "occupation": "Farmer", "preference": "Traditional Sweets", "income_level": "High", "family_size": 5, "visit_frequency": "Occasionally"}, "ad_text": "Customer_12, indulge in finest Gulab Jamun & Jalebi! Fresh daily at Hisar Bakery.", "ad_type": "Traditional Sweets", "target_district": "Adampur"}, "image_path": "generated_visual_ads/square/ad_HIS_0012_square.jpg", "district": "Adampur", "preference": "Traditional Sweets"}, {"id": "HIS_0013", "meta": {"id": "HIS_0013", "timestamp": "2026-03-31T22:10:46.718367", "persona": {"id": "HIS_0013", "name": "Customer_13", "district": "Adampur", "age_group": "60+", "occupation": "Retired", "preference": "Cakes & Pastries", "income_level": "High", "family_size": 4, "visit_frequency": "Occasionally"}, "ad_text": "Special 20% off all cakes this week in Adampur!", "ad_type": "Cakes & Pastries", "target_district": "Adampur"}, "image_path": "generated_visual_ads/square/ad_HIS_0013_square.jpg", "district": "Adampur", "preference": "Cakes & Pastries"}, {"id": "HIS_0014", "meta": {"id": "HIS_0014", "timestamp": "2026-03-31T22:10:46.776948", "persona": {"id": "HIS_0014", "name": "Customer_14", "district": "Barwala", "age_group": "60+", "occupation": "Working Professional", "preference": "Traditional Sweets", "income_level": "Middle", "family_size": 3, "visit_frequency": "Occasionally"}, "ad_text": "Customer_14, indulge in finest Gulab Jamun & Jalebi! Fresh daily at Hisar Bakery.", "ad_type": "Traditional Sweets", "target_district": "Barwala"}, "image_path": "generated_visual_ads/square/ad_HIS_0014_square.jpg", "district": "Barwala", "preference": "Traditional Sweets"}, {"id": "HIS_0015", "meta": {"id": "HIS_0015", "timestamp": "2026-03-31T22:10:46.848452", "persona": {"id": "HIS_0015", "name": "Customer_15", "district": "Uklana", "age_group": "18-25", "occupation": "Working Professional", "preference": "Traditional Sweets", "income_level": "Middle", "family_size": 5, "visit_frequency": "Weekly"}, "ad_text": "Customer_15, indulge in finest Gulab Jamun & Jalebi! Fresh daily at Hisar Bakery.", "ad_type": "Traditional Sweets", "target_district": "Uklana"}, "image_path": "generated_visual_ads/square/ad_HIS_0015_square.jpg", "district": "Uklana", "preference": "Traditional Sweets"}, {"id": "HIS_0016", "meta": {"id": "HIS_0016", "timestamp": "2026-03-31T22:10:46.906343", "persona": {"id": "HIS_0016", "name": "Customer_16", "district": "Barwala", "age_group": "46-60", "occupation": "Homemaker", "preference": "Bread & Buns", "income_level": "High", "family_size": 6, "visit_frequency": "Daily"}, "ad_text": "6 member family? Our family bread pack is perfect!", "ad_type": "Bread & Buns", "target_district": "Barwala"}, "image_path": "generated_visual_ads/square/ad_HIS_0016_square.jpg", "district": "Barwala", "preference": "Bread & Buns"}, {"id": "HIS_0017", "meta": {"id": "HIS_0017", "timestamp": "2026-03-31T22:10:46.960572", "persona": {"id": "HIS_0017", "name": "Customer_17", "district": "Uklana", "age_group": "36-45", "occupation": "Farmer", "preference": "Namkeen", "income_level": "Low", "family_size": 3, "visit_frequency": "Weekly"}, "ad_text": "Evening tea time? Pair it with fresh Samosas from Uklana bakery!", "ad_type": "Namkeen", "target_district": "Uklana"}, "image_path": "generated_visual_ads/square/ad_HIS_0017_square.jpg", "district": "Uklana", "preference": "Namkeen"}, {"id": "HIS_0018", "meta": {"id": "HIS_0018", "timestamp": "2026-03-31T22:10:47.029730", "persona": {"id": "HIS_0018", "name": "Customer_18", "district": "Hansi", "age_group": "46-60", "occupation": "Homemaker", "preference": "Namkeen", "income_level": "High", "family_size": 5, "visit_frequency": "Occasionally"}, "ad_text": "Craving something savory? Try our Mathri & Namkeen - Hansi style!", "ad_type": "Namkeen", "target_district": "Hansi"}, "image_path": "generated_visual_ads/square/ad_HIS_0018_square.jpg", "district": "Hansi", "preference": "Namkeen"}, {"id": "HIS_0019", "meta": {"id": "HIS_0019", "timestamp": "2026-03-31T22:10:47.123816", "persona": {"id": "HIS_0019", "name": "Customer_19", "district": "Hansi", "age_group": "46-60", "occupation": "Working Professional", "preference": "Custom Orders", "income_level": "Low", "family_size": 1, "visit_frequency": "Weekly"}, "ad_text": "Personalized gift hampers for Custom Orders lovers in Hansi!", "ad_type": "Custom Orders", "target_district": "Hansi"}, "image_path": "generated_visual_ads/square/ad_HIS_0019_square.jpg", "district": "Hansi", "preference": "Custom Orders"}, {"id": "HIS_0020", "meta": {"id": "HIS_0020", "timestamp": "2026-03-31T22:10:47.195987", "persona": {"id": "HIS_0020", "name": "Customer_20", "district": "Hansi", "age_group": "18-25", "occupation": "Homemaker", "preference": "Bread & Buns", "income_level": "Middle", "family_size": 4, "visit_frequency": "Daily"}, "ad_text": "Good morning Customer_20! Fresh pav and buns delivered across Hansi.", "ad_type": "Bread & Buns", "target_district": "Hansi"}, "image_path": "generated_visual_ads/square/ad_HIS_0020_square.jpg", "district": "Hansi", "preference": "Bread & Buns"}, {"id": "HIS_0021", "meta": {"id": "HIS_0021", "timestamp": "2026-03-31T22:10:47.254810", "persona": {"id": "HIS_0021", "name": "Customer_21", "district": "Barwala", "age_group": "36-45", "occupation": "Business Owner", "preference": "Cakes & Pastries", "income_level": "High", "family_size": 4, "visit_frequency": "Weekly"}, "ad_text": "Special 20% off all cakes this week in Barwala!", "ad_type": "Cakes & Pastries", "target_district": "Barwala"}, "image_path": "generated_visual_ads/square/ad_HIS_0021_square.jpg", "district": "Barwala", "preference": "Cakes & Pastries"}, {"id": "HIS_0022", "meta": {"id": "HIS_0022", "timestamp": "2026-03-31T22:10:47.333245", "persona": {"id": "HIS_0022", "name": "Customer_22", "district": "Hansi", "age_group": "26-35", "occupation": "Homemaker", "preference": "Custom Orders", "income_level": "Low", "family_size": 2, "visit_frequency": "Daily"}, "ad_text": "Customer_22, create your dream cake! Custom orders available in Hansi.", "ad_type": "Custom Orders", "target_district": "Hansi"}, "image_path": "generated_visual_ads/square/ad_HIS_0022_square.jpg", "district": "Hansi", "preference": "Custom Orders"}, {"id": "HIS_0023", "meta": {"id": "HIS_0023", "timestamp": "2026-03-31T22:10:47.424005", "persona": {"id": "HIS_0023", "name": "Customer_23", "district": "Uklana", "age_group": "26-35", "occupation": "Retired", "preference": "Cakes & Pastries", "income_level": "Middle", "family_size": 4, "visit_frequency": "Daily"}, "ad_text": "Hey Customer_23! Celebrate with our eggless Black Forest Cake!", "ad_type": "Cakes & Pastries", "target_district": "Uklana"}, "image_path": "generated_visual_ads/square/ad_HIS_0023_square.jpg", "district": "Uklana", "preference": "Cakes & Pastries"}, {"id": "HIS_0024", "meta": {"id": "HIS_0024", "timestamp": "2026-03-31T22:10:47.504679", "persona": {"id": "HIS_0024", "name": "Customer_24", "district": "Uklana", "age_group": "26-35", "occupation": "Student", "preference": "Bread & Buns", "income_level": "High", "family_size": 3, "visit_frequency": "Weekly"}, "ad_text": "3 member family? Our family bread pack is perfect!", "ad_type": "Bread & Buns", "target_district": "Uklana"}, "image_path": "generated_visual_ads/square/ad_HIS_0024_square.jpg", "district": "Uklana", "preference": "Bread & Buns"}, {"id": "HIS_0025", "meta": {"id": "HIS_0025", "timestamp": "2026-03-31T22:10:47.572485", "persona": {"id": "HIS_0025", "name": "Customer_25", "district": "Barwala", "age_group": "46-60", "occupation": "Farmer", "preference": "Traditional Sweets", "income_level": "Low", "family_size": 3, "visit_frequency": "Occasionally"}, "ad_text": "Farmer from Barwala? Treat family to traditional mithai!", "ad_type": "Traditional Sweets", "target_district": "Barwala"}, "image_path": "generated_visual_ads/square/ad_HIS_0025_square.jpg", "district": "Barwala", "preference": "Traditional Sweets"}, {"id": "HIS_0026", "meta": {"id": "HIS_0026", "timestamp": "2026-03-31T22:10:47.657765", "persona": {"id": "HIS_0026", "name": "Customer_26", "district": "Hisar", "age_group": "18-25", "occupation": "Student", "preference": "Namkeen", "income_level": "High", "family_size": 5, "visit_frequency": "Weekly"}, "ad_text": "Special discount for Students! Authentic Haryana namkeen!", "ad_type": "Namkeen", "target_district": "Hisar"}, "image_path": "generated_visual_ads/square/ad_HIS_0026_square.jpg", "district": "Hisar", "preference": "Namkeen"}, {"id": "HIS_0027", "meta": {"id": "HIS_0027", "timestamp": "2026-03-31T22:10:47.729765", "persona": {"id": "HIS_0027", "name": "Customer_27", "district": "Hansi", "age_group": "46-60", "occupation": "Business Owner", "preference": "Cakes & Pastries", "income_level": "Middle", "family_size": 3, "visit_frequency": "Weekly"}, "ad_text": "Special 20% off all cakes this week in Hansi!", "ad_type": "Cakes & Pastries", "target_district": "Hansi"}, "image_path": "generated_visual_ads/square/ad_HIS_0027_square.jpg", "district": "Hansi", "preference": "Cakes & Pastries"}, {"id": "HIS_0028", "meta": {"id": "HIS_0028", "timestamp": "2026-03-31T22:10:47.802699", "persona": {"id": "HIS_0028", "name": "Customer_28", "district": "Hansi", "age_group": "18-25", "occupation": "Retired", "preference": "Custom Orders", "income_level": "Low", "family_size": 2, "visit_frequency": "Weekly"}, "ad_text": "Personalized gift hampers for Custom Orders lovers in Hansi!", "ad_type": "Custom Orders", "target_district": "Hansi"}, "image_path": "generated_visual_ads/square/ad_HIS_0028_square.jpg", "district": "Hansi", "preference": "Custom Orders"}, {"id": "HIS_0029", "meta": {"id": "HIS_0029", "timestamp": "2026-03-31T22:10:47.866689", "persona": {"id": "HIS_0029", "name": "Customer_29", "district": "Adampur", "age_group": "26-35", "occupation": "Homemaker", "preference": "Cakes & Pastries", "income_level": "Middle", "family_size": 3, "visit_frequency": "Occasionally"}, "ad_text": "Hey Customer_29! Celebrate with our eggless Black Forest Cake!", "ad_type": "Cakes & Pastries", "target_district": "Adampur"}, "image_path": "generated_visual_ads/square/ad_HIS_0029_square.jpg", "district": "Adampur", "preference": "Cakes & Pastries"}, {"id": "HIS_0030", "meta": {"id": "HIS_0030", "timestamp": "2026-03-31T22:10:47.928532", "persona": {"id": "HIS_0030", "name": "Customer_30", "district": "Hansi", "age_group": "26-35", "occupation": "Student", "preference": "Namkeen", "income_level": "Middle", "family_size": 6, "visit_frequency": "Daily"}, "ad_text": "Special discount for Students! Authentic Haryana namkeen!", "ad_type": "Namkeen", "target_district": "Hansi"}, "image_path": "generated_visual_ads/square/ad_HIS_0030_square.jpg", "district": "Hansi", "preference": "Namkeen"}, {"id": "HIS_0031", "meta": {"id": "HIS_0031", "timestamp": "2026-03-31T22:10:48.000346", "persona": {"id": "HIS_0031", "name": "Customer_31", "district": "Uklana", "age_group": "18-25", "occupation": "Homemaker", "preference": "Custom Orders", "income_level": "Middle", "family_size": 5, "visit_frequency": "Occasionally"}, "ad_text": "Wedding in Uklana? We specialize in bulk custom orders!", "ad_type": "Custom Orders", "target_district": "Uklana"}, "image_path": "generated_visual_ads/square/ad_HIS_0031_square.jpg", "district": "Uklana", "preference": "Custom Orders"}, {"id": "HIS_0032", "meta": {"id": "HIS_0032", "timestamp": "2026-03-31T22:10:48.068742", "persona": {"id": "HIS_0032", "name": "Customer_32", "district": "Barwala", "age_group": "46-60", "occupation": "Farmer", "preference": "Custom Orders", "income_level": "Low", "family_size": 2, "visit_frequency": "Occasionally"}, "ad_text": "Personalized gift hampers for Custom Orders lovers in Barwala!", "ad_type": "Custom Orders", "target_district": "Barwala"}, "image_path": "generated_visual_ads/square/ad_HIS_0032_square.jpg", "district": "Barwala", "preference": "Custom Orders"}, {"id": "HIS_0033", "meta": {"id": "HIS_0033", "timestamp": "2026-03-31T22:10:48.157427", "persona": {"id": "HIS_0033", "name": "Customer_33", "district": "Hansi", "age_group": "46-60", "occupation": "Farmer", "preference": "Custom Orders", "income_level": "Low", "family_size": 2, "visit_frequency": "Daily"}, "ad_text": "Wedding in Hansi? We specialize in bulk custom orders!", "ad_type": "Custom Orders", "target_district": "Hansi"}, "image_path": "generated_visual_ads/square/ad_HIS_0033_square.jpg", "district": "Hansi", "preference": "Custom Orders"}, {"id": "HIS_0034", "meta": {"id": "HIS_0034", "timestamp": "2026-03-31T22:10:48.227542", "persona": {"id": "HIS_0034", "name": "Customer_34", "district": "Uklana", "age_group": "46-60", "occupation": "Student", "preference": "Custom Orders", "income_level": "Low", "family_size": 2, "visit_frequency": "Occasionally"}, "ad_text": "Customer_34, create your dream cake! Custom orders available in Uklana.", "ad_type": "Custom Orders", "target_district": "Uklana"}, "image_path": "generated_visual_ads/square/ad_HIS_0034_square.jpg", "district": "Uklana", "preference": "Custom Orders"}, {"id": "HIS_0035", "meta": {"id": "HIS_0035", "timestamp": "2026-03-31T22:10:48.305251", "persona": {"id": "HIS_0035", "name": "Customer_35", "district": "Hisar", "age_group": "46-60", "occupation": "Student", "preference": "Namkeen", "income_level": "Middle", "family_size": 2, "visit_frequency": "Occasionally"}, "ad_text": "Evening tea time? Pair it with fresh Samosas from Hisar bakery!", "ad_type": "Namkeen", "target_district": "Hisar"}, "image_path": "generated_visual_ads/square/ad_HIS_0035_square.jpg", "district": "Hisar", "preference": "Namkeen"}, {"id": "HIS_0036", "meta": {"id": "HIS_0036", "timestamp": "2026-03-31T22:10:48.381475", "persona": {"id": "HIS_0036", "name": "Customer_36", "district": "Hansi", "age_group": "26-35", "occupation": "Retired", "preference": "Traditional Sweets", "income_level": "Low", "family_size": 5, "visit_frequency": "Daily"}, "ad_text": "Retired from Hansi? Treat family to traditional mithai!", "ad_type": "Traditional Sweets", "target_district": "Hansi"}, "image_path": "generated_visual_ads/square/ad_HIS_0036_square.jpg", "district": "Hansi", "preference": "Traditional Sweets"}, {"id": "HIS_0037", "meta": {"id": "HIS_0037", "timestamp": "2026-03-31T22:10:48.452865", "persona": {"id": "HIS_0037", "name": "Customer_37", "district": "Barwala", "age_group": "60+", "occupation": "Farmer", "preference": "Traditional Sweets", "income_level": "Middle", "family_size": 3, "visit_frequency": "Monthly"}, "ad_text": "Farmer from Barwala? Treat family to traditional mithai!", "ad_type": "Traditional Sweets", "target_district": "Barwala"}, "image_path": "generated_visual_ads/square/ad_HIS_0037_square.jpg", "district": "Barwala", "preference": "Traditional Sweets"}, {"id": "HIS_0038", "meta": {"id": "HIS_0038", "timestamp": "2026-03-31T22:10:48.531331", "persona": {"id": "HIS_0038", "name": "Customer_38", "district": "Barwala", "age_group": "18-25", "occupation": "Retired", "preference": "Traditional Sweets", "income_level": "Middle", "family_size": 2, "visit_frequency": "Weekly"}, "ad_text": "Customer_38, indulge in finest Gulab Jamun & Jalebi! Fresh daily at Hisar Bakery.", "ad_type": "Traditional Sweets", "target_district": "Barwala"}, "image_path": "generated_visual_ads/square/ad_HIS_0038_square.jpg", "district": "Barwala", "preference": "Traditional Sweets"}, {"id": "HIS_0039", "meta": {"id": "HIS_0039", "timestamp": "2026-03-31T22:10:48.603707", "persona": {"id": "HIS_0039", "name": "Customer_39", "district": "Uklana", "age_group": "18-25", "occupation": "Business Owner", "preference": "Cakes & Pastries", "income_level": "Middle", "family_size": 5, "visit_frequency": "Daily"}, "ad_text": "Special 20% off all cakes this week in Uklana!", "ad_type": "Cakes & Pastries", "target_district": "Uklana"}, "image_path": "generated_visual_ads/square/ad_HIS_0039_square.jpg", "district": "Uklana", "preference": "Cakes & Pastries"}, {"id": "HIS_0040", "meta": {"id": "HIS_0040", "timestamp": "2026-03-31T22:10:48.670893", "persona": {"id": "HIS_0040", "name": "Customer_40", "district": "Hansi", "age_group": "18-25", "occupation": "Student", "preference": "Namkeen", "income_level": "Middle", "family_size": 2, "visit_frequency": "Occasionally"}, "ad_text": "Craving something savory? Try our Mathri & Namkeen - Hansi style!", "ad_type": "Namkeen", "target_district": "Hansi"}, "image_path": "generated_visual_ads/square/ad_HIS_0040_square.jpg", "district": "Hansi", "preference": "Namkeen"}, {"id": "HIS_0041", "meta": {"id": "HIS_0041", "timestamp": "2026-03-31T22:10:48.741606", "persona": {"id": "HIS_0041", "name": "Customer_41", "district": "Hansi", "age_group": "26-35", "occupation": "Working Professional", "preference": "Traditional Sweets", "income_level": "Low", "family_size": 3, "visit_frequency": "Daily"}, "ad_text": "Special offer for Hansi families! Authentic Desi Ghee sweets waiting!", "ad_type": "Traditional Sweets", "target_district": "Hansi"}, "image_path": "generated_visual_ads/square/ad_HIS_0041_square.jpg", "district": "Hansi", "preference": "Traditional Sweets"}, {"id": "HIS_0042", "meta": {"id": "HIS_0042", "timestamp": "2026-03-31T22:10:48.831010", "persona": {"id": "HIS_0042", "name": "Customer_42", "district": "Adampur", "age_group": "18-25", "occupation": "Working Professional", "preference": "Traditional Sweets", "income_level": "Low", "family_size": 5, "visit_frequency": "Occasionally"}, "ad_text": "Working Professional from Adampur? Treat family to traditional mithai!", "ad_type": "Traditional Sweets", "target_district": "Adampur"}, "image_path": "generated_visual_ads/square/ad_HIS_0042_square.jpg", "district": "Adampur", "preference": "Traditional Sweets"}, {"id": "HIS_0043", "meta": {"id": "HIS_0043", "timestamp": "2026-03-31T22:10:48.903755", "persona": {"id": "HIS_0043", "name": "Customer_43", "district": "Uklana", "age_group": "18-25", "occupation": "Business Owner", "preference": "Namkeen", "income_level": "Low", "family_size": 1, "visit_frequency": "Weekly"}, "ad_text": "Evening tea time? Pair it with fresh Samosas from Uklana bakery!", "ad_type": "Namkeen", "target_district": "Uklana"}, "image_path": "generated_visual_ads/square/ad_HIS_0043_square.jpg", "district": "Uklana", "preference": "Namkeen"}, {"id": "HIS_0044", "meta": {"id": "HIS_0044", "timestamp": "2026-03-31T22:10:48.972049", "persona": {"id": "HIS_0044", "name": "Customer_44", "district": "Barwala", "age_group": "60+", "occupation": "Farmer", "preference": "Traditional Sweets", "income_level": "Middle", "family_size": 2, "visit_frequency": "Daily"}, "ad_text": "Special offer for Barwala families! Authentic Desi Ghee sweets waiting!", "ad_type": "Traditional Sweets", "target_district": "Barwala"}, "image_path": "generated_visual_ads/square/ad_HIS_0044_square.jpg", "district": "Barwala", "preference": "Traditional Sweets"}, {"id": "HIS_0045", "meta": {"id": "HIS_0045", "timestamp": "2026-03-31T22:10:49.042347", "persona": {"id": "HIS_0045", "name": "Customer_45", "district": "Hansi", "age_group": "60+", "occupation": "Student", "preference": "Traditional Sweets", "income_level": "Low", "family_size": 1, "visit_frequency": "Monthly"}, "ad_text": "Student from Hansi? Treat family to traditional mithai!", "ad_type": "Traditional Sweets", "target_district": "Hansi"}, "image_path": "generated_visual_ads/square/ad_HIS_0045_square.jpg", "district": "Hansi", "preference": "Traditional Sweets"}, {"id": "HIS_0046", "meta": {"id": "HIS_0046", "timestamp": "2026-03-31T22:10:49.095918", "persona": {"id": "HIS_0046", "name": "Customer_46", "district": "Uklana", "age_group": "18-25", "occupation": "Student", "preference": "Custom Orders", "income_level": "High", "family_size": 5, "visit_frequency": "Monthly"}, "ad_text": "Wedding in Uklana? We specialize in bulk custom orders!", "ad_type": "Custom Orders", "target_district": "Uklana"}, "image_path": "generated_visual_ads/square/ad_HIS_0046_square.jpg", "district": "Uklana", "preference": "Custom Orders"}, {"id": "HIS_0047", "meta": {"id": "HIS_0047", "timestamp": "2026-03-31T22:10:49.142962", "persona": {"id": "HIS_0047", "name": "Customer_47", "district": "Hansi", "age_group": "60+", "occupation": "Retired", "preference": "Namkeen", "income_level": "Low", "family_size": 4, "visit_frequency": "Occasionally"}, "ad_text": "Special discount for Retireds! Authentic Haryana namkeen!", "ad_type": "Namkeen", "target_district": "Hansi"}, "image_path": "generated_visual_ads/square/ad_HIS_0047_square.jpg", "district": "Hansi", "preference": "Namkeen"}, {"id": "HIS_0048", "meta": {"id": "HIS_0048", "timestamp": "2026-03-31T22:10:49.202532", "persona": {"id": "HIS_0048", "name": "Customer_48", "district": "Barwala", "age_group": "46-60", "occupation": "Homemaker", "preference": "Bread & Buns", "income_level": "Low", "family_size": 5, "visit_frequency": "Occasionally"}, "ad_text": "Start your day fresh! Whole wheat bread baked daily for Barwala families.", "ad_type": "Bread & Buns", "target_district": "Barwala"}, "image_path": "generated_visual_ads/square/ad_HIS_0048_square.jpg", "district": "Barwala", "preference": "Bread & Buns"}, {"id": "HIS_0049", "meta": {"id": "HIS_0049", "timestamp": "2026-03-31T22:10:49.263082", "persona": {"id": "HIS_0049", "name": "Customer_49", "district": "Barwala", "age_group": "26-35", "occupation": "Business Owner", "preference": "Cakes & Pastries", "income_level": "Middle", "family_size": 6, "visit_frequency": "Weekly"}, "ad_text": "Fresh pastries daily! Perfect for Business Owners in Barwala.", "ad_type": "Cakes & Pastries", "target_district": "Barwala"}, "image_path": "generated_visual_ads/square/ad_HIS_0049_square.jpg", "district": "Barwala", "preference": "Cakes & Pastries"}, {"id": "HIS_0050", "meta": {"id": "HIS_0050", "timestamp": "2026-03-31T22:10:49.320078", "persona": {"id": "HIS_0050", "name": "Customer_50", "district": "Barwala", "age_group": "18-25", "occupation": "Homemaker", "preference": "Bread & Buns", "income_level": "Low", "family_size": 1, "visit_frequency": "Occasionally"}, "ad_text": "Good morning Customer_50! Fresh pav and buns delivered across Barwala.", "ad_type": "Bread & Buns", "target_district": "Barwala"}, "image_path": "generated_visual_ads/square/ad_HIS_0050_square.jpg", "district": "Barwala", "preference": "Bread & Buns"}, {"id": "HIS_0051", "meta": {"id": "HIS_0051", "timestamp": "2026-03-31T22:10:49.371139", "persona": {"id": "HIS_0051", "name": "Customer_51", "district": "Hisar", "age_group": "60+", "occupation": "Homemaker", "preference": "Namkeen", "income_level": "High", "family_size": 5, "visit_frequency": "Daily"}, "ad_text": "Evening tea time? Pair it with fresh Samosas from Hisar bakery!", "ad_type": "Namkeen", "target_district": "Hisar"}, "image_path": "generated_visual_ads/square/ad_HIS_0051_square.jpg", "district": "Hisar", "preference": "Namkeen"}, {"id": "HIS_0052", "meta": {"id": "HIS_0052", "timestamp": "2026-03-31T22:10:49.460753", "persona": {"id": "HIS_0052", "name": "Customer_52", "district": "Adampur", "age_group": "60+", "occupation": "Student", "preference": "Cakes & Pastries", "income_level": "Low", "family_size": 3, "visit_frequency": "Monthly"}, "ad_text": "Special 20% off all cakes this week in Adampur!", "ad_type": "Cakes & Pastries", "target_district": "Adampur"}, "image_path": "generated_visual_ads/square/ad_HIS_0052_square.jpg", "district": "Adampur", "preference": "Cakes & Pastries"}, {"id": "HIS_0053", "meta": {"id": "HIS_0053", "timestamp": "2026-03-31T22:10:49.538155", "persona": {"id": "HIS_0053", "name": "Customer_53", "district": "Uklana", "age_group": "46-60", "occupation": "Business Owner", "preference": "Namkeen", "income_level": "Low", "family_size": 3, "visit_frequency": "Daily"}, "ad_text": "Craving something savory? Try our Mathri & Namkeen - Uklana style!", "ad_type": "Namkeen", "target_district": "Uklana"}, "image_path": "generated_visual_ads/square/ad_HIS_0053_square.jpg", "district": "Uklana", "preference": "Namkeen"}, {"id": "HIS_0054", "meta": {"id": "HIS_0054", "timestamp": "2026-03-31T22:10:49.595512", "persona": {"id": "HIS_0054", "name": "Customer_54", "district": "Barwala", "age_group": "26-35", "occupation": "Student", "preference": "Custom Orders", "income_level": "Low", "family_size": 6, "visit_frequency": "Daily"}, "ad_text": "Wedding in Barwala? We specialize in bulk custom orders!", "ad_type": "Custom Orders", "target_district": "Barwala"}, "image_path": "generated_visual_ads/square/ad_HIS_0054_square.jpg", "district": "Barwala", "preference": "Custom Orders"}, {"id": "HIS_0055", "meta": {"id": "HIS_0055", "timestamp": "2026-03-31T22:10:49.661382", "persona": {"id": "HIS_0055", "name": "Customer_55", "district": "Barwala", "age_group": "46-60", "occupation": "Homemaker", "preference": "Custom Orders", "income_level": "Middle", "family_size": 6, "visit_frequency": "Monthly"}, "ad_text": "Customer_55, create your dream cake! Custom orders available in Barwala.", "ad_type": "Custom Orders", "target_district": "Barwala"}, "image_path": "generated_visual_ads/square/ad_HIS_0055_square.jpg", "district": "Barwala", "preference": "Custom Orders"}, {"id": "HIS_0056", "meta": {"id": "HIS_0056", "timestamp": "2026-03-31T22:10:49.718093", "persona": {"id": "HIS_0056", "name": "Customer_56", "district": "Hisar", "age_group": "36-45", "occupation": "Farmer", "preference": "Bread & Buns", "income_level": "High", "family_size": 6, "visit_frequency": "Daily"}, "ad_text": "Start your day fresh! Whole wheat bread baked daily for Hisar families.", "ad_type": "Bread & Buns", "target_district": "Hisar"}, "image_path": "generated_visual_ads/square/ad_HIS_0056_square.jpg", "district": "Hisar", "preference": "Bread & Buns"}, {"id": "HIS_0057", "meta": {"id": "HIS_0057", "timestamp": "2026-03-31T22:10:49.775045", "persona": {"id": "HIS_0057", "name": "Customer_57", "district": "Hansi", "age_group": "46-60", "occupation": "Working Professional", "preference": "Traditional Sweets", "income_level": "Middle", "family_size": 3, "visit_frequency": "Weekly"}, "ad_text": "Working Professional from Hansi? Treat family to traditional mithai!", "ad_type": "Traditional Sweets", "target_district": "Hansi"}, "image_path": "generated_visual_ads/square/ad_HIS_0057_square.jpg", "district": "Hansi", "preference": "Traditional Sweets"}, {"id": "HIS_0058", "meta": {"id": "HIS_0058", "timestamp": "2026-03-31T22:10:49.834457", "persona": {"id": "HIS_0058", "name": "Customer_58", "district": "Adampur", "age_group": "36-45", "occupation": "Business Owner", "preference": "Custom Orders", "income_level": "Middle", "family_size": 3, "visit_frequency": "Monthly"}, "ad_text": "Personalized gift hampers for Custom Orders lovers in Adampur!", "ad_type": "Custom Orders", "target_district": "Adampur"}, "image_path": "generated_visual_ads/square/ad_HIS_0058_square.jpg", "district": "Adampur", "preference": "Custom Orders"}, {"id": "HIS_0059", "meta": {"id": "HIS_0059", "timestamp": "2026-03-31T22:10:49.889945", "persona": {"id": "HIS_0059", "name": "Customer_59", "district": "Barwala", "age_group": "36-45", "occupation": "Retired", "preference": "Namkeen", "income_level": "High", "family_size": 5, "visit_frequency": "Daily"}, "ad_text": "Special discount for Retireds! Authentic Haryana namkeen!", "ad_type": "Namkeen", "target_district": "Barwala"}, "image_path": "generated_visual_ads/square/ad_HIS_0059_square.jpg", "district": "Barwala", "preference": "Namkeen"}, {"id": "HIS_0060", "meta": {"id": "HIS_0060", "timestamp": "2026-03-31T22:10:49.939499", "persona": {"id": "HIS_0060", "name": "Customer_60", "district": "Adampur", "age_group": "36-45", "occupation": "Business Owner", "preference": "Traditional Sweets", "income_level": "Middle", "family_size": 1, "visit_frequency": "Weekly"}, "ad_text": "Customer_60, indulge in finest Gulab Jamun & Jalebi! Fresh daily at Hisar Bakery.", "ad_type": "Traditional Sweets", "target_district": "Adampur"}, "image_path": "generated_visual_ads/square/ad_HIS_0060_square.jpg", "district": "Adampur", "preference": "Traditional Sweets"}, {"id": "HIS_0061", "meta": {"id": "HIS_0061", "timestamp": "2026-03-31T22:10:50.006011", "persona": {"id": "HIS_0061", "name": "Customer_61", "district": "Adampur", "age_group": "18-25", "occupation": "Business Owner", "preference": "Bread & Buns", "income_level": "Middle", "family_size": 2, "visit_frequency": "Monthly"}, "ad_text": "Good morning Customer_61! Fresh pav and buns delivered across Adampur.", "ad_type": "Bread & Buns", "target_district": "Adampur"}, "image_path": "generated_visual_ads/square/ad_HIS_0061_square.jpg", "district": "Adampur", "preference": "Bread & Buns"}, {"id": "HIS_0062", "meta": {"id": "HIS_0062", "timestamp": "2026-03-31T22:10:50.092057", "persona": {"id": "HIS_0062", "name": "Customer_62", "district": "Barwala", "age_group": "36-45", "occupation": "Farmer", "preference": "Custom Orders", "income_level": "High", "family_size": 1, "visit_frequency": "Weekly"}, "ad_text": "Customer_62, create your dream cake! Custom orders available in Barwala.", "ad_type": "Custom Orders", "target_district": "Barwala"}, "image_path": "generated_visual_ads/square/ad_HIS_0062_square.jpg", "district": "Barwala", "preference": "Custom Orders"}, {"id": "HIS_0063", "meta": {"id": "HIS_0063", "timestamp": "2026-03-31T22:10:50.162261", "persona": {"id": "HIS_0063", "name": "Customer_63", "district": "Uklana", "age_group": "46-60", "occupation": "Retired", "preference": "Traditional Sweets", "income_level": "Middle", "family_size": 1, "visit_frequency": "Weekly"}, "ad_text": "Retired from Uklana? Treat family to traditional mithai!", "ad_type": "Traditional Sweets", "target_district": "Uklana"}, "image_path": "generated_visual_ads/square/ad_HIS_0063_square.jpg", "district": "Uklana", "preference": "Traditional Sweets"}, {"id": "HIS_0064", "meta": {"id": "HIS_0064", "timestamp": "2026-03-31T22:10:50.218093", "persona": {"id": "HIS_0064", "name": "Customer_64", "district": "Hisar", "age_group": "18-25", "occupation": "Working Professional", "preference": "Custom Orders", "income_level": "Low", "family_size": 2, "visit_frequency": "Monthly"}, "ad_text": "Customer_64, create your dream cake! Custom orders available in Hisar.", "ad_type": "Custom Orders", "target_district": "Hisar"}, "image_path": "generated_visual_ads/square/ad_HIS_0064_square.jpg", "district": "Hisar", "preference": "Custom Orders"}, {"id": "HIS_0065", "meta": {"id": "HIS_0065", "timestamp": "2026-03-31T22:10:50.280142", "persona": {"id": "HIS_0065", "name": "Customer_65", "district": "Hisar", "age_group": "36-45", "occupation": "Business Owner", "preference": "Namkeen", "income_level": "Low", "family_size": 6, "visit_frequency": "Monthly"}, "ad_text": "Special discount for Business Owners! Authentic Haryana namkeen!", "ad_type": "Namkeen", "target_district": "Hisar"}, "image_path": "generated_visual_ads/square/ad_HIS_0065_square.jpg", "district": "Hisar", "preference": "Namkeen"}, {"id": "HIS_0066", "meta": {"id": "HIS_0066", "timestamp": "2026-03-31T22:10:50.362068", "persona": {"id": "HIS_0066", "name": "Customer_66", "district": "Uklana", "age_group": "60+", "occupation": "Retired", "preference": "Namkeen", "income_level": "Middle", "family_size": 3, "visit_frequency": "Occasionally"}, "ad_text": "Evening tea time? Pair it with fresh Samosas from Uklana bakery!", "ad_type": "Namkeen", "target_district": "Uklana"}, "image_path": "generated_visual_ads/square/ad_HIS_0066_square.jpg", "district": "Uklana", "preference": "Namkeen"}, {"id": "HIS_0067", "meta": {"id": "HIS_0067", "timestamp": "2026-03-31T22:10:50.432339", "persona": {"id": "HIS_0067", "name": "Customer_67", "district": "Uklana", "age_group": "26-35", "occupation": "Business Owner", "preference": "Bread & Buns", "income_level": "High", "family_size": 3, "visit_frequency": "Occasionally"}, "ad_text": "Start your day fresh! Whole wheat bread baked daily for Uklana families.", "ad_type": "Bread & Buns", "target_district": "Uklana"}, "image_path": "generated_visual_ads/square/ad_HIS_0067_square.jpg", "district": "Uklana", "preference": "Bread & Buns"}, {"id": "HIS_0068", "meta": {"id": "HIS_0068", "timestamp": "2026-03-31T22:10:50.538165", "persona": {"id": "HIS_0068", "name": "Customer_68", "district": "Hansi", "age_group": "60+", "occupation": "Working Professional", "preference": "Namkeen", "income_level": "High", "family_size": 4, "visit_frequency": "Weekly"}, "ad_text": "Craving something savory? Try our Mathri & Namkeen - Hansi style!", "ad_type": "Namkeen", "target_district": "Hansi"}, "image_path": "generated_visual_ads/square/ad_HIS_0068_square.jpg", "district": "Hansi", "preference": "Namkeen"}, {"id": "HIS_0069", "meta": {"id": "HIS_0069", "timestamp": "2026-03-31T22:10:50.616703", "persona": {"id": "HIS_0069", "name": "Customer_69", "district": "Adampur", "age_group": "26-35", "occupation": "Farmer", "preference": "Traditional Sweets", "income_level": "Low", "family_size": 2, "visit_frequency": "Occasionally"}, "ad_text": "Special offer for Adampur families! Authentic Desi Ghee sweets waiting!", "ad_type": "Traditional Sweets", "target_district": "Adampur"}, "image_path": "generated_visual_ads/square/ad_HIS_0069_square.jpg", "district": "Adampur", "preference": "Traditional Sweets"}, {"id": "HIS_0070", "meta": {"id": "HIS_0070", "timestamp": "2026-03-31T22:10:50.680577", "persona": {"id": "HIS_0070", "name": "Customer_70", "district": "Hisar", "age_group": "36-45", "occupation": "Farmer", "preference": "Custom Orders", "income_level": "Middle", "family_size": 3, "visit_frequency": "Monthly"}, "ad_text": "Wedding in Hisar? We specialize in bulk custom orders!", "ad_type": "Custom Orders", "target_district": "Hisar"}, "image_path": "generated_visual_ads/square/ad_HIS_0070_square.jpg", "district": "Hisar", "preference": "Custom Orders"}, {"id": "HIS_0071", "meta": {"id": "HIS_0071", "timestamp": "2026-03-31T22:10:50.741743", "persona": {"id": "HIS_0071", "name": "Customer_71", "district": "Barwala", "age_group": "26-35", "occupation": "Homemaker", "preference": "Custom Orders", "income_level": "Low", "family_size": 2, "visit_frequency": "Daily"}, "ad_text": "Customer_71, create your dream cake! Custom orders available in Barwala.", "ad_type": "Custom Orders", "target_district": "Barwala"}, "image_path": "generated_visual_ads/square/ad_HIS_0071_square.jpg", "district": "Barwala", "preference": "Custom Orders"}, {"id": "HIS_0072", "meta": {"id": "HIS_0072", "timestamp": "2026-03-31T22:10:50.850450", "persona": {"id": "HIS_0072", "name": "Customer_72", "district": "Adampur", "age_group": "60+", "occupation": "Homemaker", "preference": "Namkeen", "income_level": "High", "family_size": 1, "visit_frequency": "Daily"}, "ad_text": "Special discount for Homemakers! Authentic Haryana namkeen!", "ad_type": "Namkeen", "target_district": "Adampur"}, "image_path": "generated_visual_ads/square/ad_HIS_0072_square.jpg", "district": "Adampur", "preference": "Namkeen"}, {"id": "HIS_0073", "meta": {"id": "HIS_0073", "timestamp": "2026-03-31T22:10:50.936540", "persona": {"id": "HIS_0073", "name": "Customer_73", "district": "Hisar", "age_group": "26-35", "occupation": "Farmer", "preference": "Custom Orders", "income_level": "Middle", "family_size": 4, "visit_frequency": "Weekly"}, "ad_text": "Personalized gift hampers for Custom Orders lovers in Hisar!", "ad_type": "Custom Orders", "target_district": "Hisar"}, "image_path": "generated_visual_ads/square/ad_HIS_0073_square.jpg", "district": "Hisar", "preference": "Custom Orders"}, {"id": "HIS_0074", "meta": {"id": "HIS_0074", "timestamp": "2026-03-31T22:10:50.997263", "persona": {"id": "HIS_0074", "name": "Customer_74", "district": "Hansi", "age_group": "46-60", "occupation": "Business Owner", "preference": "Bread & Buns", "income_level": "Middle", "family_size": 2, "visit_frequency": "Daily"}, "ad_text": "Good morning Customer_74! Fresh pav and buns delivered across Hansi.", "ad_type": "Bread & Buns", "target_district": "Hansi"}, "image_path": "generated_visual_ads/square/ad_HIS_0074_square.jpg", "district": "Hansi", "preference": "Bread & Buns"}, {"id": "HIS_0075", "meta": {"id": "HIS_0075", "timestamp": "2026-03-31T22:10:51.059825", "persona": {"id": "HIS_0075", "name": "Customer_75", "district": "Hisar", "age_group": "26-35", "occupation": "Retired", "preference": "Bread & Buns", "income_level": "Low", "family_size": 4, "visit_frequency": "Occasionally"}, "ad_text": "Good morning Customer_75! Fresh pav and buns delivered across Hisar.", "ad_type": "Bread & Buns", "target_district": "Hisar"}, "image_path": "generated_visual_ads/square/ad_HIS_0075_square.jpg", "district": "Hisar", "preference": "Bread & Buns"}, {"id": "HIS_0076", "meta": {"id": "HIS_0076", "timestamp": "2026-03-31T22:10:51.130944", "persona": {"id": "HIS_0076", "name": "Customer_76", "district": "Hansi", "age_group": "18-25", "occupation": "Farmer", "preference": "Namkeen", "income_level": "Middle", "family_size": 1, "visit_frequency": "Monthly"}, "ad_text": "Evening tea time? Pair it with fresh Samosas from Hansi bakery!", "ad_type": "Namkeen", "target_district": "Hansi"}, "image_path": "generated_visual_ads/square/ad_HIS_0076_square.jpg", "district": "Hansi", "preference": "Namkeen"}, {"id": "HIS_0077", "meta": {"id": "HIS_0077", "timestamp": "2026-03-31T22:10:51.199997", "persona": {"id": "HIS_0077", "name": "Customer_77", "district": "Adampur", "age_group": "36-45", "occupation": "Business Owner", "preference": "Cakes & Pastries", "income_level": "High", "family_size": 4, "visit_frequency": "Daily"}, "ad_text": "Hey Customer_77! Celebrate with our eggless Black Forest Cake!", "ad_type": "Cakes & Pastries", "target_district": "Adampur"}, "image_path": "generated_visual_ads/square/ad_HIS_0077_square.jpg", "district": "Adampur", "preference": "Cakes & Pastries"}, {"id": "HIS_0078", "meta": {"id": "HIS_0078", "timestamp": "2026-03-31T22:10:51.258463", "persona": {"id": "HIS_0078", "name": "Customer_78", "district": "Adampur", "age_group": "36-45", "occupation": "Farmer", "preference": "Traditional Sweets", "income_level": "High", "family_size": 6, "visit_frequency": "Daily"}, "ad_text": "Customer_78, indulge in finest Gulab Jamun & Jalebi! Fresh daily at Hisar Bakery.", "ad_type": "Traditional Sweets", "target_district": "Adampur"}, "image_path": "generated_visual_ads/square/ad_HIS_0078_square.jpg", "district": "Adampur", "preference": "Traditional Sweets"}, {"id": "HIS_0079", "meta": {"id": "HIS_0079", "timestamp": "2026-03-31T22:10:51.324666", "persona": {"id": "HIS_0079", "name": "Customer_79", "district": "Hisar", "age_group": "26-35", "occupation": "Student", "preference": "Bread & Buns", "income_level": "High", "family_size": 6, "visit_frequency": "Weekly"}, "ad_text": "6 member family? Our family bread pack is perfect!", "ad_type": "Bread & Buns", "target_district": "Hisar"}, "image_path": "generated_visual_ads/square/ad_HIS_0079_square.jpg", "district": "Hisar", "preference": "Bread & Buns"}, {"id": "HIS_0080", "meta": {"id": "HIS_0080", "timestamp": "2026-03-31T22:10:51.390896", "persona": {"id": "HIS_0080", "name": "Customer_80", "district": "Adampur", "age_group": "46-60", "occupation": "Retired", "preference": "Cakes & Pastries", "income_level": "Low", "family_size": 2, "visit_frequency": "Daily"}, "ad_text": "Hey Customer_80! Celebrate with our eggless Black Forest Cake!", "ad_type": "Cakes & Pastries", "target_district": "Adampur"}, "image_path": "generated_visual_ads/square/ad_HIS_0080_square.jpg", "district": "Adampur", "preference": "Cakes & Pastries"}, {"id": "HIS_0081", "meta": {"id": "HIS_0081", "timestamp": "2026-03-31T22:10:51.475667", "persona": {"id": "HIS_0081", "name": "Customer_81", "district": "Barwala", "age_group": "36-45", "occupation": "Homemaker", "preference": "Traditional Sweets", "income_level": "Middle", "family_size": 6, "visit_frequency": "Monthly"}, "ad_text": "Homemaker from Barwala? Treat family to traditional mithai!", "ad_type": "Traditional Sweets", "target_district": "Barwala"}, "image_path": "generated_visual_ads/square/ad_HIS_0081_square.jpg", "district": "Barwala", "preference": "Traditional Sweets"}, {"id": "HIS_0082", "meta": {"id": "HIS_0082", "timestamp": "2026-03-31T22:10:51.573795", "persona": {"id": "HIS_0082", "name": "Customer_82", "district": "Barwala", "age_group": "46-60", "occupation": "Working Professional", "preference": "Custom Orders", "income_level": "Low", "family_size": 4, "visit_frequency": "Occasionally"}, "ad_text": "Customer_82, create your dream cake! Custom orders available in Barwala.", "ad_type": "Custom Orders", "target_district": "Barwala"}, "image_path": "generated_visual_ads/square/ad_HIS_0082_square.jpg", "district": "Barwala", "preference": "Custom Orders"}, {"id": "HIS_0083", "meta": {"id": "HIS_0083", "timestamp": "2026-03-31T22:10:51.671857", "persona": {"id": "HIS_0083", "name": "Customer_83", "district": "Barwala", "age_group": "36-45", "occupation": "Business Owner", "preference": "Namkeen", "income_level": "High", "family_size": 6, "visit_frequency": "Monthly"}, "ad_text": "Evening tea time? Pair it with fresh Samosas from Barwala bakery!", "ad_type": "Namkeen", "target_district": "Barwala"}, "image_path": "generated_visual_ads/square/ad_HIS_0083_square.jpg", "district": "Barwala", "preference": "Namkeen"}, {"id": "HIS_0084", "meta": {"id": "HIS_0084", "timestamp": "2026-03-31T22:10:51.749956", "persona": {"id": "HIS_0084", "name": "Customer_84", "district": "Adampur", "age_group": "36-45", "occupation": "Business Owner", "preference": "Namkeen", "income_level": "Middle", "family_size": 4, "visit_frequency": "Daily"}, "ad_text": "Evening tea time? Pair it with fresh Samosas from Adampur bakery!", "ad_type": "Namkeen", "target_district": "Adampur"}, "image_path": "generated_visual_ads/square/ad_HIS_0084_square.jpg", "district": "Adampur", "preference": "Namkeen"}, {"id": "HIS_0085", "meta": {"id": "HIS_0085", "timestamp": "2026-03-31T22:10:51.836813", "persona": {"id": "HIS_0085", "name": "Customer_85", "district": "Hansi", "age_group": "46-60", "occupation": "Working Professional", "preference": "Namkeen", "income_level": "Middle", "family_size": 4, "visit_frequency": "Weekly"}, "ad_text": "Special discount for Working Professionals! Authentic Haryana namkeen!", "ad_type": "Namkeen", "target_district": "Hansi"}, "image_path": "generated_visual_ads/square/ad_HIS_0085_square.jpg", "district": "Hansi", "preference": "Namkeen"}, {"id": "HIS_0086", "meta": {"id": "HIS_0086", "timestamp": "2026-03-31T22:10:51.914818", "persona": {"id": "HIS_0086", "name": "Customer_86", "district": "Hisar", "age_group": "36-45", "occupation": "Retired", "preference": "Custom Orders", "income_level": "High", "family_size": 6, "visit_frequency": "Daily"}, "ad_text": "Wedding in Hisar? We specialize in bulk custom orders!", "ad_type": "Custom Orders", "target_district": "Hisar"}, "image_path": "generated_visual_ads/square/ad_HIS_0086_square.jpg", "district": "Hisar", "preference": "Custom Orders"}, {"id": "HIS_0087", "meta": {"id": "HIS_0087", "timestamp": "2026-03-31T22:10:51.975790", "persona": {"id": "HIS_0087", "name": "Customer_87", "district": "Adampur", "age_group": "26-35", "occupation": "Working Professional", "preference": "Cakes & Pastries", "income_level": "High", "family_size": 5, "visit_frequency": "Monthly"}, "ad_text": "Special 20% off all cakes this week in Adampur!", "ad_type": "Cakes & Pastries", "target_district": "Adampur"}, "image_path": "generated_visual_ads/square/ad_HIS_0087_square.jpg", "district": "Adampur", "preference": "Cakes & Pastries"}, {"id": "HIS_0088", "meta": {"id": "HIS_0088", "timestamp": "2026-03-31T22:10:52.057064", "persona": {"id": "HIS_0088", "name": "Customer_88", "district": "Barwala", "age_group": "18-25", "occupation": "Student", "preference": "Namkeen", "income_level": "Low", "family_size": 6, "visit_frequency": "Daily"}, "ad_text": "Evening tea time? Pair it with fresh Samosas from Barwala bakery!", "ad_type": "Namkeen", "target_district": "Barwala"}, "image_path": "generated_visual_ads/square/ad_HIS_0088_square.jpg", "district": "Barwala", "preference": "Namkeen"}, {"id": "HIS_0089", "meta": {"id": "HIS_0089", "timestamp": "2026-03-31T22:10:52.138854", "persona": {"id": "HIS_0089", "name": "Customer_89", "district": "Uklana", "age_group": "26-35", "occupation": "Business Owner", "preference": "Cakes & Pastries", "income_level": "Middle", "family_size": 5, "visit_frequency": "Daily"}, "ad_text": "Hey Customer_89! Celebrate with our eggless Black Forest Cake!", "ad_type": "Cakes & Pastries", "target_district": "Uklana"}, "image_path": "generated_visual_ads/square/ad_HIS_0089_square.jpg", "district": "Uklana", "preference": "Cakes & Pastries"}, {"id": "HIS_0090", "meta": {"id": "HIS_0090", "timestamp": "2026-03-31T22:10:52.226574", "persona": {"id": "HIS_0090", "name": "Customer_90", "district": "Adampur", "age_group": "36-45", "occupation": "Retired", "preference": "Traditional Sweets", "income_level": "High", "family_size": 2, "visit_frequency": "Weekly"}, "ad_text": "Retired from Adampur? Treat family to traditional mithai!", "ad_type": "Traditional Sweets", "target_district": "Adampur"}, "image_path": "generated_visual_ads/square/ad_HIS_0090_square.jpg", "district": "Adampur", "preference": "Traditional Sweets"}, {"id": "HIS_0091", "meta": {"id": "HIS_0091", "timestamp": "2026-03-31T22:10:52.287595", "persona": {"id": "HIS_0091", "name": "Customer_91", "district": "Barwala", "age_group": "60+", "occupation": "Farmer", "preference": "Cakes & Pastries", "income_level": "Middle", "family_size": 1, "visit_frequency": "Monthly"}, "ad_text": "Special 20% off all cakes this week in Barwala!", "ad_type": "Cakes & Pastries", "target_district": "Barwala"}, "image_path": "generated_visual_ads/square/ad_HIS_0091_square.jpg", "district": "Barwala", "preference": "Cakes & Pastries"}, {"id": "HIS_0092", "meta": {"id": "HIS_0092", "timestamp": "2026-03-31T22:10:52.370629", "persona": {"id": "HIS_0092", "name": "Customer_92", "district": "Uklana", "age_group": "60+", "occupation": "Homemaker", "preference": "Bread & Buns", "income_level": "High", "family_size": 3, "visit_frequency": "Daily"}, "ad_text": "Good morning Customer_92! Fresh pav and buns delivered across Uklana.", "ad_type": "Bread & Buns", "target_district": "Uklana"}, "image_path": "generated_visual_ads/square/ad_HIS_0092_square.jpg", "district": "Uklana", "preference": "Bread & Buns"}, {"id": "HIS_0093", "meta": {"id": "HIS_0093", "timestamp": "2026-03-31T22:10:52.454372", "persona": {"id": "HIS_0093", "name": "Customer_93", "district": "Adampur", "age_group": "26-35", "occupation": "Homemaker", "preference": "Bread & Buns", "income_level": "Low", "family_size": 3, "visit_frequency": "Weekly"}, "ad_text": "Good morning Customer_93! Fresh pav and buns delivered across Adampur.", "ad_type": "Bread & Buns", "target_district": "Adampur"}, "image_path": "generated_visual_ads/square/ad_HIS_0093_square.jpg", "district": "Adampur", "preference": "Bread & Buns"}, {"id": "HIS_0094", "meta": {"id": "HIS_0094", "timestamp": "2026-03-31T22:10:52.516319", "persona": {"id": "HIS_0094", "name": "Customer_94", "district": "Hisar", "age_group": "46-60", "occupation": "Farmer", "preference": "Custom Orders", "income_level": "Low", "family_size": 1, "visit_frequency": "Weekly"}, "ad_text": "Wedding in Hisar? We specialize in bulk custom orders!", "ad_type": "Custom Orders", "target_district": "Hisar"}, "image_path": "generated_visual_ads/square/ad_HIS_0094_square.jpg", "district": "Hisar", "preference": "Custom Orders"}, {"id": "HIS_0095", "meta": {"id": "HIS_0095", "timestamp": "2026-03-31T22:10:52.573880", "persona": {"id": "HIS_0095", "name": "Customer_95", "district": "Hisar", "age_group": "18-25", "occupation": "Working Professional", "preference": "Traditional Sweets", "income_level": "Low", "family_size": 5, "visit_frequency": "Daily"}, "ad_text": "Special offer for Hisar families! Authentic Desi Ghee sweets waiting!", "ad_type": "Traditional Sweets", "target_district": "Hisar"}, "image_path": "generated_visual_ads/square/ad_HIS_0095_square.jpg", "district": "Hisar", "preference": "Traditional Sweets"}, {"id": "HIS_0096", "meta": {"id": "HIS_0096", "timestamp": "2026-03-31T22:10:52.634889", "persona": {"id": "HIS_0096", "name": "Customer_96", "district": "Uklana", "age_group": "18-25", "occupation": "Student", "preference": "Custom Orders", "income_level": "High", "family_size": 2, "visit_frequency": "Occasionally"}, "ad_text": "Wedding in Uklana? We specialize in bulk custom orders!", "ad_type": "Custom Orders", "target_district": "Uklana"}, "image_path": "generated_visual_ads/square/ad_HIS_0096_square.jpg", "district": "Uklana", "preference": "Custom Orders"}, {"id": "HIS_0097", "meta": {"id": "HIS_0097", "timestamp": "2026-03-31T22:10:52.696552", "persona": {"id": "HIS_0097", "name": "Customer_97", "district": "Uklana", "age_group": "18-25", "occupation": "Homemaker", "preference": "Namkeen", "income_level": "Low", "family_size": 4, "visit_frequency": "Weekly"}, "ad_text": "Special discount for Homemakers! Authentic Haryana namkeen!", "ad_type": "Namkeen", "target_district": "Uklana"}, "image_path": "generated_visual_ads/square/ad_HIS_0097_square.jpg", "district": "Uklana", "preference": "Namkeen"}, {"id": "HIS_0098", "meta": {"id": "HIS_0098", "timestamp": "2026-03-31T22:10:52.744379", "persona": {"id": "HIS_0098", "name": "Customer_98", "district": "Barwala", "age_group": "36-45", "occupation": "Farmer", "preference": "Traditional Sweets", "income_level": "Middle", "family_size": 3, "visit_frequency": "Daily"}, "ad_text": "Farmer from Barwala? Treat family to traditional mithai!", "ad_type": "Traditional Sweets", "target_district": "Barwala"}, "image_path": "generated_visual_ads/square/ad_HIS_0098_square.jpg", "district": "Barwala", "preference": "Traditional Sweets"}, {"id": "HIS_0099", "meta": {"id": "HIS_0099", "timestamp": "2026-03-31T22:10:52.806317", "persona": {"id": "HIS_0099", "name": "Customer_99", "district": "Barwala", "age_group": "60+", "occupation": "Homemaker", "preference": "Namkeen", "income_level": "Low", "family_size": 4, "visit_frequency": "Monthly"}, "ad_text": "Craving something savory? Try our Mathri & Namkeen - Barwala style!", "ad_type": "Namkeen", "target_district": "Barwala"}, "image_path": "generated_visual_ads/square/ad_HIS_0099_square.jpg", "district": "Barwala", "preference": "Namkeen"}, {"id": "HIS_0100", "meta": {"id": "HIS_0100", "timestamp": "2026-03-31T22:10:52.861843", "persona": {"id": "HIS_0100", "name": "Customer_100", "district": "Hisar", "age_group": "26-35", "occupation": "Retired", "preference": "Namkeen", "income_level": "Low", "family_size": 6, "visit_frequency": "Monthly"}, "ad_text": "Craving something savory? Try our Mathri & Namkeen - Hisar style!", "ad_type": "Namkeen", "target_district": "Hisar"}, "image_path": "generated_visual_ads/square/ad_HIS_0100_square.jpg", "district": "Hisar", "preference": "Namkeen"}, {"id": "HIS_0101", "meta": {"id": "HIS_0101", "timestamp": "2026-03-31T22:10:52.909788", "persona": {"id": "HIS_0101", "name": "Customer_101", "district": "Hansi", "age_group": "36-45", "occupation": "Working Professional", "preference": "Namkeen", "income_level": "Low", "family_size": 4, "visit_frequency": "Occasionally"}, "ad_text": "Craving something savory? Try our Mathri & Namkeen - Hansi style!", "ad_type": "Namkeen", "target_district": "Hansi"}, "image_path": "generated_visual_ads/square/ad_HIS_0101_square.jpg", "district": "Hansi", "preference": "Namkeen"}];
+        
+        let currentAd = null;
+        let autoPlayInterval = null;
+        let playedAds = new Set();
+        let delay = 3000;
+        
+        // Category color mapping
+        const categoryColors = {
+            'Traditional Sweets': 'cat-sweets',
+            'Cakes & Pastries': 'cat-cakes',
+            'Bread & Buns': 'cat-bread',
+            'Namkeen': 'cat-namkeen',
+            'Custom Orders': 'cat-custom'
+        };
+        
+        function updateStats() {
+            document.getElementById('totalAds').textContent = ads.length;
+            document.getElementById('playedCount').textContent = playedAds.size;
+            document.getElementById('statusTotal').textContent = ads.length;
+        }
+        
+        function showRandomAd() {
+            if (ads.length === 0) {
+                alert('No ads loaded! Please generate visual ads first.');
+                return;
+            }
+            
+            // Pick random ad
+            const randomIndex = Math.floor(Math.random() * ads.length);
+            currentAd = ads[randomIndex];
+            
+            // Update image
+            const container = document.getElementById('adContainer');
+            container.innerHTML = `<img src="${currentAd.image_path}" class="ad-image" alt="Ad ${currentAd.id}">`;
+            
+            // Update info
+            document.getElementById('adId').textContent = currentAd.id;
+            document.getElementById('district').textContent = currentAd.district;
+            
+            const category = currentAd.preference;
+            const categoryEl = document.getElementById('category');
+            categoryEl.innerHTML = `<span class="category-badge ${categoryColors[category] || 'cat-custom'}">${category}</span>`;
+            
+            document.getElementById('occupation').textContent = currentAd.meta.persona.occupation;
+            document.getElementById('message').textContent = currentAd.meta.ad_text;
+            
+            // Update status
+            document.getElementById('statusBar').innerHTML = 
+                `Now Playing: <strong>${currentAd.id}</strong> | District: ${currentAd.district} | Type: ${category}`;
+            
+            // Track played
+            playedAds.add(currentAd.id);
+            updateStats();
+        }
+        
+        function toggleAutoPlay() {
+            if (autoPlayInterval) {
+                stopAutoPlay();
+                return;
+            }
+            
+            document.getElementById('playBtn').innerHTML = '⏸️ Pause';
+            document.getElementById('stopBtn').disabled = false;
+            document.getElementById('randomBtn').disabled = true;
+            
+            showRandomAd();
+            
+            autoPlayInterval = setInterval(() => {
+                showRandomAd();
+            }, delay);
+        }
+        
+        function stopAutoPlay() {
+            if (autoPlayInterval) {
+                clearInterval(autoPlayInterval);
+                autoPlayInterval = null;
+            }
+            
+            document.getElementById('playBtn').innerHTML = '▶️ Auto Play';
+            document.getElementById('stopBtn').disabled = true;
+            document.getElementById('randomBtn').disabled = false;
+            document.getElementById('statusBar').textContent = 'Auto-play stopped. Ready.';
+        }
+        
+        function updateSpeed(value) {
+            delay = (11 - parseInt(value)) * 1000; // 1=10s, 10=1s
+            document.getElementById('speedValue').textContent = (delay / 1000) + 's';
+            
+            // Restart if playing
+            if (autoPlayInterval) {
+                clearInterval(autoPlayInterval);
+                autoPlayInterval = setInterval(() => {
+                    showRandomAd();
+                }, delay);
+            }
+        }
+        
+        // Initialize
+        updateStats();
+        
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                toggleAutoPlay();
+            } else if (e.code === 'ArrowRight') {
+                showRandomAd();
+            } else if (e.code === 'Escape') {
+                stopAutoPlay();
+            }
+        });
+    </script>
+</body>
+</html>

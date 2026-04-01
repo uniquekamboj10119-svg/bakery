@@ -1,0 +1,10 @@
+# Hisar Bakery Eval Framework — Requirements
+
+# Core
+pandas>=2.0
+openpyxl>=3.1       # xlsx reading
+huggingface_hub>=0.23  # InferenceClient
+
+# Optional but recommended
+tqdm>=4.66          # progress bars
+rich>=13.0          # pretty console output

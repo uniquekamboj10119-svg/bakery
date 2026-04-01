@@ -1,0 +1,473 @@
+
+<style>
+@keyframes wave{0%,100%{transform:scaleY(0.15)}50%{transform:scaleY(1)}}
+@keyframes floatUp{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+@keyframes steam{0%{opacity:0;transform:translateY(0) scaleX(1)}40%{opacity:0.55}100%{opacity:0;transform:translateY(-22px) scaleX(1.6)}}
+@keyframes fadeSlide{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes ticker{0%{transform:translateX(100%)}100%{transform:translateX(-100%)}}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+@keyframes encodeDot{from{opacity:0;r:0}to{opacity:1}}
+.bar{display:inline-block;background:#BA7517;border-radius:2px;transform-origin:bottom;animation:wave var(--d,0.6s) ease-in-out infinite;animation-delay:var(--delay,0s)}
+.step-item{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;position:relative}
+.step-circle{width:28px;height:28px;border-radius:50%;border:1.5px solid var(--color-border-secondary);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;transition:all 0.4s;background:var(--color-background-primary);color:var(--color-text-secondary)}
+.step-circle.active{background:#BA7517;border-color:#BA7517;color:#fff}
+.step-circle.done{background:#1D9E75;border-color:#1D9E75;color:#fff}
+.step-label{font-size:10px;color:var(--color-text-tertiary);text-align:center;white-space:nowrap}
+.step-label.active{color:#BA7517;font-weight:500}
+.step-label.done{color:#1D9E75}
+.step-line{position:absolute;top:14px;left:calc(50% + 14px);right:calc(-50% + 14px);height:1.5px;background:var(--color-border-tertiary);z-index:0}
+.step-line.done{background:#1D9E75}
+.ad-fade{animation:fadeSlide 0.5s ease forwards}
+.persona-badge{display:inline-block;padding:2px 8px;border-radius:var(--border-radius-md);font-size:11px;font-weight:500}
+</style>
+
+<div style="padding:1rem 0;max-width:880px;margin:0 auto;font-family:var(--font-sans)">
+
+<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1.25rem">
+  <div>
+    <h2 style="font-size:17px;font-weight:500;color:var(--color-text-primary);margin:0">Hisar Bakery — personalized ad generator</h2>
+    <p style="font-size:12px;color:var(--color-text-secondary);margin:3px 0 0">FAISS-encoded persona pipeline · incremental ad rendering · audio simulation</p>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+    <div style="background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:4px 12px;font-size:12px;color:var(--color-text-secondary)"><span id="stat-count">0</span> / 1,498 generated</div>
+    <button onclick="generateNext()" id="gen-btn" style="font-size:12px;padding:5px 14px">Generate next ↗</button>
+    <button onclick="toggleAuto()" id="auto-btn" style="font-size:12px;padding:5px 14px">Auto-play</button>
+  </div>
+</div>
+
+<!-- pipeline steps -->
+<div style="display:flex;align-items:flex-start;margin-bottom:1.25rem;position:relative;padding:0 8px" id="pipeline">
+  <div class="step-item"><div class="step-circle" id="s0">1</div><div class="step-line" id="l0"></div><div class="step-label" id="sl0">Load persona</div></div>
+  <div class="step-item"><div class="step-circle" id="s1">2</div><div class="step-line" id="l1"></div><div class="step-label" id="sl1">Tokenize</div></div>
+  <div class="step-item"><div class="step-circle" id="s2">3</div><div class="step-line" id="l2"></div><div class="step-label" id="sl2">FAISS encode</div></div>
+  <div class="step-item"><div class="step-circle" id="s3">4</div><div class="step-line" id="l3"></div><div class="step-label" id="sl3">Retrieve context</div></div>
+  <div class="step-item"><div class="step-circle" id="s4">5</div><div class="step-line" id="l4" style="display:none"></div><div class="step-label" id="sl4">Generate ad</div></div>
+  <div class="step-item"><div class="step-circle" id="s5">6</div><div class="step-label" id="sl5">Render video</div></div>
+</div>
+
+<!-- main 3-col layout -->
+<div style="display:grid;grid-template-columns:200px 1fr 220px;gap:12px;margin-bottom:12px">
+
+  <!-- persona card -->
+  <div style="background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:14px" id="persona-card">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+      <div id="avatar" style="width:40px;height:40px;border-radius:50%;background:var(--color-background-info);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:500;color:var(--color-text-info);flex-shrink:0">?</div>
+      <div><div id="p-name" style="font-size:13px;font-weight:500;color:var(--color-text-primary)">—</div><div id="p-occ" style="font-size:11px;color:var(--color-text-secondary)">—</div></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:6px;font-size:11px">
+      <div style="display:flex;justify-content:space-between"><span style="color:var(--color-text-secondary)">Age</span><span id="p-age" style="color:var(--color-text-primary);font-weight:500">—</span></div>
+      <div style="display:flex;justify-content:space-between"><span style="color:var(--color-text-secondary)">Gender</span><span id="p-gender" style="color:var(--color-text-primary);font-weight:500">—</span></div>
+      <div style="border-top:0.5px solid var(--color-border-tertiary);padding-top:6px;color:var(--color-text-secondary)">Income</div>
+      <div id="p-income" style="color:var(--color-text-primary);font-size:11px">—</div>
+      <div style="border-top:0.5px solid var(--color-border-tertiary);padding-top:6px;color:var(--color-text-secondary)">Purchase freq</div>
+      <div id="p-freq" style="color:var(--color-text-primary);font-size:11px">—</div>
+      <div style="border-top:0.5px solid var(--color-border-tertiary);padding-top:6px">
+        <span id="p-model" class="persona-badge" style="background:var(--color-background-info);color:var(--color-text-info)">—</span>
+        <span id="p-lat" style="font-size:10px;color:var(--color-text-tertiary);margin-left:4px">—</span>
+      </div>
+      <div id="p-parse" style="font-size:10px;color:var(--color-text-tertiary)">—</div>
+    </div>
+  </div>
+
+  <!-- video frame -->
+  <div style="background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden;display:flex;flex-direction:column">
+    <div style="position:relative;flex:1;min-height:200px;background:#FAC775;overflow:hidden;display:flex;align-items:center;justify-content:center" id="video-bg">
+      <!-- bakery scene elements -->
+      <div id="scene-wrap" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center">
+        <svg width="100%" height="100%" viewBox="0 0 340 200" id="bakery-svg">
+          <rect width="340" height="200" fill="#FAC775"/>
+          <!-- shelf -->
+          <rect x="30" y="140" width="280" height="6" rx="2" fill="#EF9F27" opacity="0.7"/>
+          <!-- bread loaf 1 -->
+          <g id="bread1" style="animation:floatUp 2.5s ease-in-out infinite">
+            <ellipse cx="90" cy="130" rx="38" ry="22" fill="#BA7517"/>
+            <ellipse cx="90" cy="120" rx="30" ry="16" fill="#EF9F27"/>
+            <line x1="75" y1="118" x2="75" y2="122" stroke="#BA7517" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="90" y1="115" x2="90" y2="119" stroke="#BA7517" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="105" y1="118" x2="105" y2="122" stroke="#BA7517" stroke-width="1.5" stroke-linecap="round"/>
+          </g>
+          <!-- cake -->
+          <g id="cake1" style="animation:floatUp 3.1s ease-in-out infinite 0.4s">
+            <rect x="195" y="118" width="64" height="22" rx="4" fill="#F5C4B3"/>
+            <rect x="199" y="112" width="56" height="14" rx="4" fill="#F0997B"/>
+            <rect x="204" y="108" width="46" height="10" rx="3" fill="#F5C4B3"/>
+            <circle cx="215" cy="107" r="3" fill="#E24B4A"/>
+            <circle cx="227" cy="107" r="3" fill="#E24B4A"/>
+            <circle cx="239" cy="107" r="3" fill="#E24B4A"/>
+          </g>
+          <!-- steam from bread -->
+          <g>
+            <ellipse cx="82" cy="100" rx="4" ry="6" fill="white" style="animation:steam 2s ease-in-out infinite"/>
+            <ellipse cx="90" cy="96" rx="3" ry="5" fill="white" style="animation:steam 2s ease-in-out infinite 0.6s"/>
+            <ellipse cx="98" cy="99" rx="3.5" ry="5" fill="white" style="animation:steam 2s ease-in-out infinite 1.1s"/>
+          </g>
+          <!-- Hisar Bakery sign -->
+          <rect x="100" y="20" width="140" height="36" rx="6" fill="#633806" opacity="0.9"/>
+          <text x="170" y="38" text-anchor="middle" font-size="11" font-weight="500" fill="#FAC775" font-family="sans-serif">Hisar Bakery</text>
+          <text x="170" y="50" text-anchor="middle" font-size="8" fill="#EF9F27" font-family="sans-serif">Fresh · Local · Swadisht</text>
+          <!-- ad overlay panel -->
+          <rect x="8" y="155" width="324" height="38" rx="4" fill="#412402" opacity="0.85"/>
+          <text id="ad-overlay-name" x="18" y="167" font-size="9" fill="#FAC775" font-family="sans-serif">Persona: —</text>
+          <text id="ad-overlay-offer" x="18" y="179" font-size="8" fill="#EF9F27" font-family="sans-serif">—</text>
+          <!-- REC indicator -->
+          <circle id="rec-dot" cx="318" cy="28" r="5" fill="#E24B4A" style="animation:blink 1s infinite"/>
+          <text x="308" y="24" text-anchor="end" font-size="8" fill="#E24B4A" font-family="sans-serif">REC</text>
+        </svg>
+      </div>
+      <!-- ticker -->
+      <div style="position:absolute;bottom:40px;left:0;right:0;overflow:hidden;height:16px;background:rgba(65,36,2,0.7)">
+        <div id="ticker-text" style="white-space:nowrap;font-size:9px;color:#FAC775;line-height:16px;padding-left:100%;animation:ticker 12s linear infinite">Hisar Bakery — fresh baked daily — order now!</div>
+      </div>
+    </div>
+    <!-- waveform -->
+    <div style="padding:8px 12px;background:var(--color-background-primary);border-top:0.5px solid var(--color-border-tertiary)">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+        <div id="play-dot" style="width:8px;height:8px;border-radius:50%;background:#1D9E75;animation:blink 1.2s infinite"></div>
+        <span style="font-size:10px;color:var(--color-text-secondary)" id="audio-label">Audio narration active</span>
+        <span style="font-size:10px;color:var(--color-text-tertiary);margin-left:auto" id="latency-label">—</span>
+      </div>
+      <div style="display:flex;align-items:flex-end;gap:2px;height:32px" id="waveform">
+      </div>
+    </div>
+  </div>
+
+  <!-- ad content -->
+  <div style="display:flex;flex-direction:column;gap:8px" id="ad-panel">
+    <div style="background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:12px">
+      <div style="font-size:10px;font-weight:500;color:var(--color-text-secondary);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em">Ad copy</div>
+      <div id="ad-copy" style="font-size:11px;color:var(--color-text-primary);line-height:1.6">—</div>
+    </div>
+    <div style="background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:12px">
+      <div style="font-size:10px;font-weight:500;color:var(--color-text-secondary);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em">Tweet</div>
+      <div id="ad-tweet" style="font-size:11px;color:var(--color-text-primary);line-height:1.6">—</div>
+    </div>
+    <div style="background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:12px">
+      <div style="font-size:10px;font-weight:500;color:var(--color-text-secondary);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em">Offer</div>
+      <div id="ad-offer" style="font-size:11px;color:var(--color-text-primary);line-height:1.6">—</div>
+    </div>
+  </div>
+</div>
+
+<!-- FAISS viz + stats row -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+  <!-- FAISS embedding viz -->
+  <div style="background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:12px">
+    <div style="font-size:11px;font-weight:500;color:var(--color-text-secondary);margin-bottom:8px">FAISS embedding space (dim 0 × dim 1)</div>
+    <svg width="100%" viewBox="0 0 320 140" id="faiss-svg">
+      <rect width="320" height="140" fill="none"/>
+      <line x1="30" y1="10" x2="30" y2="120" stroke="var(--color-border-tertiary)" stroke-width="0.5"/>
+      <line x1="30" y1="120" x2="310" y2="120" stroke="var(--color-border-tertiary)" stroke-width="0.5"/>
+      <text x="170" y="135" text-anchor="middle" font-size="9" fill="#888780" font-family="sans-serif">embedding dim 1</text>
+      <text x="14" y="70" text-anchor="middle" font-size="9" fill="#888780" font-family="sans-serif" transform="rotate(-90,14,70)">dim 2</text>
+      <g id="faiss-dots"></g>
+    </svg>
+    <div style="display:flex;gap:12px;margin-top:4px">
+      <span style="font-size:10px;display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:50%;background:#B4B2A9;display:inline-block"></span>other personas</span>
+      <span style="font-size:10px;display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:50%;background:#1D9E75;display:inline-block"></span>neighbours</span>
+      <span style="font-size:10px;display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:50%;background:#BA7517;display:inline-block"></span>current</span>
+    </div>
+  </div>
+
+  <!-- stats + animation prompt -->
+  <div style="display:flex;flex-direction:column;gap:8px">
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+      <div style="background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:10px;text-align:center">
+        <div style="font-size:10px;color:var(--color-text-secondary)">Generated</div>
+        <div id="m-gen" style="font-size:20px;font-weight:500;color:var(--color-text-primary)">0</div>
+      </div>
+      <div style="background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:10px;text-align:center">
+        <div style="font-size:10px;color:var(--color-text-secondary)">Avg latency</div>
+        <div id="m-lat" style="font-size:20px;font-weight:500;color:var(--color-text-primary)">—</div>
+      </div>
+      <div style="background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:10px;text-align:center">
+        <div style="font-size:10px;color:var(--color-text-secondary)">Parse ok</div>
+        <div id="m-parse" style="font-size:20px;font-weight:500;color:var(--color-text-primary)">—</div>
+      </div>
+    </div>
+    <div style="background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:12px;flex:1">
+      <div style="font-size:10px;font-weight:500;color:var(--color-text-secondary);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em">Animation prompt</div>
+      <div id="ad-anim" style="font-size:11px;color:var(--color-text-primary);line-height:1.6;max-height:90px;overflow-y:auto">—</div>
+    </div>
+  </div>
+</div>
+
+<!-- speed control -->
+<div style="display:flex;align-items:center;gap:16px;padding-top:4px">
+  <span style="font-size:12px;color:var(--color-text-secondary)">Speed</span>
+  <input type="range" min="0.5" max="3" step="0.5" value="1" id="speed-slider" style="width:120px">
+  <span id="speed-label" style="font-size:12px;color:var(--color-text-secondary)">1×</span>
+  <span style="font-size:12px;color:var(--color-text-tertiary);margin-left:auto" id="step-msg">Click "Generate next" to start</span>
+</div>
+
+</div>
+
+<script>
+const PERSONAS = [
+  {id:1,name:"Mamta Antil",gender:"Female",age:42,occ:"Student",income:"Lower-Middle (₹20k-35k)",freq:"Monthly",
+   ad:"Hisar Bakery - Desh ki Rasoi ka Khana! Aao apne parivaar ke liye swasth aur swadisht khana banaye! Multigrain options bhi uplabdh hain!",
+   tweet:"Arey Mamta ji, Hisar Bakery se apne parivaar ko swasth aur swadisht khana milta hai! 🍞💚 #HisarBakery #StudentDiscount #HealthyBreads",
+   offer:"10% ka discount apni monthly shopping par. Offer code: STUDENT10",
+   anim:"Hisar Bakery ki desh ki rasoi — warm aur swadisht mood, multigrain bread aur kesar cake, slow-motion camera, peach aur golden brown palette.",
+   parse:false,lat:1275,model:"llama-3.1-8b-instant"},
+  {id:2,name:"Yashpal Swami",gender:"Male",age:27,occ:"Tailor",income:"High (₹1L+)",freq:"3-4 times/week",
+   ad:"Hisar Bakery, aapki pyari zubaniyaan ke liye! 🍰 Kesar aur elaichi ki vishesh batein. Order abhi se aur paayein sabse swadisht naan bataar!",
+   tweet:"Corporate gifting ke liye Hisar Bakery ka chayan karein! 🎁 Swasth, swadisht, aur unique. #HisarBakery #CorporateGifting #HaryanviDelights",
+   offer:"10% off par kisi bhi order par! 3-4 baar order karne par free Hisar Bakery gift milayega.",
+   anim:"Hisar ke bus stand area ki street view, romantic aur swadisht mood, slow-motion mein naan bataar ki pakao, saffron aur beige rang.",
+   parse:true,lat:986,model:"llama-3.1-8b-instant"},
+  {id:3,name:"Kamal Bhatia",gender:"Male",age:26,occ:"Army Personnel",income:"Low (₹10k-20k)",freq:"Daily",
+   ad:"Khane me khushkhabri, parivaar ke saath! 🍞 Ab Hisar Bakery par aaye aur apne ghar ko Haryanvi swad ka pehla choice banaayein!",
+   tweet:"Khushkhabri! 🍞 Hisar Bakery ne ab Haryanvi swad mein sugar-free aur low-calorie biscuits laaye hain. #HisarBakery #HealthyEating",
+   offer:"₹50 off par pehle order par jab aap Hisar Bakery par walk-in karenge.",
+   anim:"Ek sahyog karne wali Army bahu ki zaroorat — parivaar ki pehli saaheli banne ki kahani. Chandni ki raat mein Hisar Bakery dukaan.",
+   parse:false,lat:1323,model:"llama-3.1-8b-instant"},
+  {id:4,name:"Simran Sharma",gender:"Female",age:34,occ:"Hardware Shop Owner",income:"High (₹1L+)",freq:"3-4 times/week",
+   ad:"Hisar Bakery, apne ghar mein swasth bhojan! 🍞 Keto, multigrain aur prasad vyanjanen ke naye vikalp. Order karein — 10% discount!",
+   tweet:"Diet par bhi chaahein? Keto bakes Hisar Bakery se! 10% discount par laayein. #HisarBakery #KetoBakes #HisarFood",
+   offer:"Keto Delight Pack — 10% off on keto bakes combo. Min order ₹2500. Valid till 2024-06-30.",
+   anim:"Hisar ke garm samay ka chitra, khushmizaaji maa aur bachchon ke saath, bakes ka naya vikalp, smooth circular camera, garm rengen.",
+   parse:true,lat:1838,model:"llama-3.1-8b-instant"},
+  {id:5,name:"Rajesh Hooda",gender:"Male",age:38,occ:"Government Employee",income:"Middle (₹35k-60k)",freq:"Weekly",
+   ad:"Hisar Bakery — sarkari sahab ke liye khaas! Har hafte fresh whole-wheat bread aur bran cookies. Bulk order discount available! 🍞",
+   tweet:"Government sahab ke liye Hisar Bakery ka weekly pack! Whole-wheat, less sugar, more health. #HisarBakery #WeeklyPack",
+   offer:"Weekly pack mein 15% off. 5 items combo at ₹499 only.",
+   anim:"Sarkari office ke baad ghar jaate hue Hisar Bakery pe rukna, evening light, warm browns, slow pan shot of fresh breads.",
+   parse:true,lat:1102,model:"llama-3.1-8b-instant"},
+  {id:6,name:"Anita Devi",gender:"Female",age:51,occ:"Homemaker",income:"Middle (₹35k-60k)",freq:"Weekly",
+   ad:"Ghar ki khushboo, Hisar Bakery ka swad! Apne parivaar ke liye sabse swasth aur tasty breads ab ghar par mangayein! 🏠",
+   tweet:"Anita ji ki tarah smart moms choose Hisar Bakery for family health! 🥖 #HisarBakery #FamilyFirst #HealthyHome",
+   offer:"Sunday special — buy 2 get 1 free on any bread. Home delivery available.",
+   anim:"Ghar ki rasoi mein subah ka scene — chai ke saath fresh bread, warm golden light, birds chirping, Hisar Bakery box on table.",
+   parse:true,lat:945,model:"llama-3.1-8b-instant"},
+  {id:7,name:"Suresh Yadav",gender:"Male",age:44,occ:"Farmer",income:"Seasonal (₹15k-40k)",freq:"Bi-weekly",
+   ad:"Khet ka kaam, Hisar Bakery ka swad! Seedha farm se aata, seedha Hisar Bakery ka bread. Asli Haryana ka swad! 🌾",
+   tweet:"Kisan bhai ke liye special! Hisar Bakery ka multigrain atta bread — #HisarBakery #KisanFirst #HaryanaSwad",
+   offer:"Kisan card par 12% off. Bi-weekly order par free delivery.",
+   anim:"Khet ke kinarey sooraj nikal raha hai, tractor ke saath Hisar Bakery ki van aa rahi hai, rustic golden setting, very earthy tones.",
+   parse:true,lat:1456,model:"llama-3.1-8b-instant"},
+  {id:8,name:"Priya Malik",gender:"Female",age:23,occ:"IT Professional",income:"Upper-Middle (₹60k-1L)",freq:"3-4 times/week",
+   ad:"Working hard? Snack smart! Hisar Bakery ka protein-rich multigrain — perfect for your desk! Order online, delivered to office. 💻🥖",
+   tweet:"Office snacks just got healthy! @HisarBakery protein bread pack is my WFH fave. 🍞 #HisarBakery #TechLife #HealthySnack",
+   offer:"Office bulk pack — 5 packs for ₹799. Free UPI cashback ₹50 on first order.",
+   anim:"Modern co-working space, laptop open, Hisar Bakery box beside coffee, clean minimal aesthetic, morning light, fast-paced editing.",
+   parse:true,lat:812,model:"llama-3.1-8b-instant"},
+  {id:9,name:"Dharampal Siwach",gender:"Male",age:33,occ:"Nurse",income:"Upper-Middle (₹60k-1L)",freq:"Bi-weekly",
+   ad:"स्वादिष्ट और स्वस्थ बेकिंग का अनुभव करें! अपने परिवार के लिए 50% डिस्काउंट — केवल Hisar Bakery पर! UPI से भुगतान करें!",
+   tweet:"बच्चों के लिए स्वस्थ टिफिन — चिपको कुकीज़ और वेजिटेबल कुकीज़! #HisarBakery #HealthyBaking #BakeryGoals",
+   offer:"Swasthya Pack — 20% off on total purchase of ₹500. Bacchon ke healthy snacks included.",
+   anim:"Chhat par ek grain hub, hara-bhura din, green tea sandwich aur vegetable cookies, Hindi cinema style, angle shots.",
+   parse:true,lat:6761,model:"llama-3.1-8b-instant"},
+  {id:10,name:"Nikita Bishnoi",gender:"Female",age:45,occ:"Housewife",income:"Upper-Middle (₹60k-1L)",freq:"Monthly",
+   ad:"Har Hisar ki ghar ka swad, aapke ghar aaya! Preservative-free swad ke liye Hisar Bakery ke paas aa jayein. 10% deal milega!",
+   tweet:"Nikita di ke liye multigrain bread ab bhi milte hai! Keto baked goods bhi hamare paas! 😊 #HisarBakery #HealthyBaking",
+   offer:"5 combo packs for ₹2000 discount for families of 4+. Share contact for home delivery.",
+   anim:"Hisar ki chhoti galiyon mein, rustic setting, sunheri rang, multigrain bread low-angle shot, Hisar Bakery logo small font.",
+   parse:true,lat:6794,model:"llama-3.1-8b-instant"},
+  {id:11,name:"Divya Sheoran",gender:"Female",age:55,occ:"Private Job",income:"Low (₹10k-20k)",freq:"Monthly",
+   ad:"Khushiyon ki meethi duniya Hisar Bakery mein hai! 🎉 Special gujiya aur mathri ke tyan se apne gharwalo ko manaayein! 📞",
+   tweet:"Birthday cake ki tension mat lo! 🎂 Hisar Bakery mein 24 ghante kisi bhi tarikhe par cake order karein! #HisarBakery #DiwaliSpecial",
+   offer:"5% discount har purchase par + 5 loyalty points, 10 points par ek free item.",
+   anim:"Ghar ki pehli floor par Hisar Bakery ki gujiya tray, golden color scheme, gulaabi rang ki gujiya, Himachali decoration.",
+   parse:true,lat:6531,model:"llama-3.1-8b-instant"},
+  {id:12,name:"Mohan Lal",gender:"Male",age:60,occ:"Retired Teacher",income:"Middle (₹35k-60k)",freq:"Weekly",
+   ad:"Retired life mein bhi swad bana rahein! Hisar Bakery ka sugar-free cake aur whole-grain bread — doctor ne bhi recommend kiya! 👴",
+   tweet:"Senior citizens ke liye Hisar Bakery ka sugar-free range! Healthy aging ka swad. #HisarBakery #HealthyAging",
+   offer:"Senior citizen 10% off on all sugar-free products. Loyalty card available.",
+   anim:"Subah ki dawai ke baad chai aur sugar-free cake, garden mein baithe hue, calm warm morning, close-up of hands holding bread.",
+   parse:true,lat:1234,model:"llama-3.1-8b-instant"},
+];
+
+let generatedCount = 0;
+let totalLatency = 0;
+let parsedOk = 0;
+let autoTimer = null;
+let isRunning = false;
+let speedMult = 1;
+
+const STEP_LABELS = ["Load persona","Tokenize","FAISS encode","Retrieve context","Generate ad","Render video"];
+const STEP_MSGS = [
+  "Reading persona from JSONL dataset...",
+  "Tokenizing demographic fields...",
+  "Computing 384-dim sentence embedding via FAISS...",
+  "Retrieving k=5 nearest neighbours...",
+  "Generating personalized ad with llama-3.1-8b...",
+  "Rendering animated video frame with audio...",
+];
+
+function buildWaveform(){
+  const wf = document.getElementById('waveform');
+  wf.innerHTML = '';
+  const count = 40;
+  for(let i=0;i<count;i++){
+    const b = document.createElement('div');
+    b.className = 'bar';
+    const d = (0.4 + Math.random()*0.8).toFixed(2);
+    const delay = (i*0.04).toFixed(2);
+    b.style.cssText = `--d:${d}s;--delay:${delay}s;width:5px;height:${Math.floor(8+Math.random()*24)}px;border-radius:1px;flex-shrink:0`;
+    wf.appendChild(b);
+  }
+}
+
+function buildFAISS(currentIdx){
+  const svg = document.getElementById('faiss-dots');
+  svg.innerHTML = '';
+  const pts = [];
+  for(let i=0;i<35;i++){
+    pts.push({x:35+Math.random()*270, y:12+Math.random()*100});
+  }
+  const cx = 35+Math.random()*270, cy = 12+Math.random()*100;
+  const neighbours = pts.slice(0,5);
+  pts.forEach((p,i)=>{
+    if(i<5) return;
+    const c = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    c.setAttribute('cx',p.x.toFixed(1));c.setAttribute('cy',p.y.toFixed(1));c.setAttribute('r','3.5');
+    c.setAttribute('fill','#B4B2A9');c.setAttribute('opacity','0.6');
+    svg.appendChild(c);
+  });
+  neighbours.forEach(p=>{
+    const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+    line.setAttribute('x1',cx);line.setAttribute('y1',cy);
+    line.setAttribute('x2',p.x.toFixed(1));line.setAttribute('y2',p.y.toFixed(1));
+    line.setAttribute('stroke','#1D9E75');line.setAttribute('stroke-width','0.8');line.setAttribute('stroke-dasharray','3,2');
+    svg.appendChild(line);
+    const c = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    c.setAttribute('cx',p.x.toFixed(1));c.setAttribute('cy',p.y.toFixed(1));c.setAttribute('r','4.5');
+    c.setAttribute('fill','#1D9E75');c.setAttribute('opacity','0.75');
+    svg.appendChild(c);
+  });
+  const cc = document.createElementNS('http://www.w3.org/2000/svg','circle');
+  cc.setAttribute('cx',cx);cc.setAttribute('cy',cy);cc.setAttribute('r','6');cc.setAttribute('fill','#BA7517');
+  svg.appendChild(cc);
+}
+
+function setStep(n){
+  for(let i=0;i<6;i++){
+    const s=document.getElementById('s'+i);
+    const sl=document.getElementById('sl'+i);
+    s.classList.remove('active','done');
+    sl.classList.remove('active','done');
+    if(i<n){s.classList.add('done');sl.classList.add('done');s.textContent='✓';}
+    else if(i===n){s.classList.add('active');sl.classList.add('active');s.textContent=i+1;}
+    else{s.textContent=i+1;}
+    if(i<5){
+      const l=document.getElementById('l'+i);
+      if(l){l.classList.toggle('done',i<n);}
+    }
+  }
+  document.getElementById('step-msg').textContent = STEP_MSGS[Math.min(n,5)];
+}
+
+function fillPersona(p){
+  document.getElementById('avatar').textContent = p.name.split(' ').map(w=>w[0]).join('').slice(0,2);
+  document.getElementById('avatar').style.background = p.gender==='Female'?'var(--color-background-info)':'var(--color-background-success)';
+  document.getElementById('avatar').style.color = p.gender==='Female'?'var(--color-text-info)':'var(--color-text-success)';
+  document.getElementById('p-name').textContent = p.name;
+  document.getElementById('p-occ').textContent = p.occ;
+  document.getElementById('p-age').textContent = p.age;
+  document.getElementById('p-gender').textContent = p.gender;
+  document.getElementById('p-income').textContent = p.income;
+  document.getElementById('p-freq').textContent = p.freq;
+  document.getElementById('p-model').textContent = p.model.replace('llama-','');
+  document.getElementById('p-lat').textContent = p.lat.toFixed(0)+'ms';
+  document.getElementById('p-parse').textContent = 'Parse: '+(p.parse?'success ✓':'failed ✗');
+  document.getElementById('p-parse').style.color = p.parse?'var(--color-text-success)':'var(--color-text-danger)';
+}
+
+function fillAd(p){
+  ['ad-copy','ad-tweet','ad-offer','ad-anim'].forEach(id=>document.getElementById(id).classList.add('ad-fade'));
+  document.getElementById('ad-copy').textContent = p.ad;
+  document.getElementById('ad-tweet').textContent = p.tweet;
+  document.getElementById('ad-offer').textContent = typeof p.offer==='object'?JSON.stringify(p.offer):p.offer;
+  document.getElementById('ad-anim').textContent = p.anim;
+  document.getElementById('ad-overlay-name').textContent = 'Persona: '+p.name+' · #'+p.id;
+  const shortOffer = (typeof p.offer==='string'?p.offer:p.offer.offer_description||'').slice(0,60)+'…';
+  document.getElementById('ad-overlay-offer').textContent = shortOffer;
+  document.getElementById('ticker-text').textContent = p.ad.slice(0,80)+'...';
+  document.getElementById('latency-label').textContent = p.lat.toFixed(0)+'ms latency';
+  document.getElementById('audio-label').textContent = 'Voice: '+p.name.split(' ')[0]+' — narrating ad';
+}
+
+function updateStats(p){
+  generatedCount++;
+  totalLatency += p.lat;
+  if(p.parse) parsedOk++;
+  document.getElementById('m-gen').textContent = generatedCount;
+  document.getElementById('m-lat').textContent = Math.round(totalLatency/generatedCount)+'ms';
+  document.getElementById('m-parse').textContent = Math.round(parsedOk/generatedCount*100)+'%';
+  document.getElementById('stat-count').textContent = generatedCount.toLocaleString()+' / 1,498 generated';
+}
+
+function delay(ms){ return new Promise(r=>setTimeout(r,ms/speedMult)); }
+
+async function generateNext(){
+  if(isRunning) return;
+  isRunning = true;
+  const btn = document.getElementById('gen-btn');
+  btn.disabled = true;
+
+  const p = PERSONAS[Math.floor(Math.random()*PERSONAS.length)];
+
+  setStep(0); await delay(700);
+  fillPersona(p);
+
+  setStep(1); await delay(500);
+
+  setStep(2);
+  buildFAISS(p.id);
+  await delay(900);
+
+  setStep(3); await delay(600);
+
+  setStep(4);
+  fillAd(p);
+  buildWaveform();
+  await delay(1000);
+
+  setStep(5);
+  updateStats(p);
+  await delay(500);
+
+  for(let i=0;i<6;i++){
+    const s=document.getElementById('s'+i);
+    const sl=document.getElementById('sl'+i);
+    s.classList.remove('active');s.classList.add('done');s.textContent='✓';
+    sl.classList.remove('active');sl.classList.add('done');
+    if(i<5){const l=document.getElementById('l'+i);if(l)l.classList.add('done');}
+  }
+  document.getElementById('step-msg').textContent = 'Ad rendered for '+p.name+' · persona #'+p.id;
+
+  btn.disabled = false;
+  isRunning = false;
+}
+
+function toggleAuto(){
+  const btn = document.getElementById('auto-btn');
+  if(autoTimer){
+    clearInterval(autoTimer);autoTimer=null;
+    btn.textContent='Auto-play';
+    btn.style.borderColor='';
+  } else {
+    btn.textContent='Stop auto';
+    btn.style.borderColor='var(--color-border-danger)';
+    generateNext();
+    autoTimer = setInterval(()=>{
+      if(!isRunning) generateNext();
+    }, Math.max(3000, 5000/speedMult));
+  }
+}
+
+document.getElementById('speed-slider').addEventListener('input',function(){
+  speedMult = parseFloat(this.value);
+  document.getElementById('speed-label').textContent = speedMult+'×';
+  if(autoTimer){
+    clearInterval(autoTimer);
+    autoTimer = setInterval(()=>{if(!isRunning)generateNext();}, Math.max(1500,5000/speedMult));
+  }
+});
+
+buildWaveform();
+buildFAISS(0);
+setStep(-1);
+document.getElementById('step-msg').textContent = 'Ready — click "Generate next" to start';
+</script>
